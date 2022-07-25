@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 LABEL name="UVaFlow"
 LABEL org.opencontainers.image.description="Parallel software to compute flowmaps for the extraction of LCS."
 LABEL version="v1"
-LABEL maintainer="sergio@infor.uva.es"
+LABEL maintainer="rocio@infor.uva.es"
 ARG INSTALL_DIR=/uvaflow
 
 ENV TZ="Europe/Madrid"
@@ -17,7 +17,7 @@ RUN apt-get update && \
 RUN apt update && \
     apt install -y clang
     
-RUN pip3 install pyvista meshio
+#RUN pip3 install pyvista meshio
 
 # Copy sources to create
 COPY src ${INSTALL_DIR}/src
@@ -32,4 +32,3 @@ COPY test_3D.sh ${INSTALL_DIR}/test_3D.sh
 # Container init directory
 WORKDIR ${INSTALL_DIR}
 RUN make
-
