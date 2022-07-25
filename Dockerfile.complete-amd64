@@ -24,7 +24,7 @@ COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
 COPY source ${INSTALL_DIR}/source
 COPY preprocess ${INSTALL_DIR}/preprocess
-COPY bin ${INSTALL_DIR}/bin
+RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 COPY test_2D.sh ${INSTALL_DIR}/test_2D.sh
 COPY test_3D.sh ${INSTALL_DIR}/test_3D.sh
