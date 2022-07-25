@@ -41,6 +41,8 @@ LABEL maintainer="rocio@infor.uva.es"
 
 ARG INSTALL_DIR=/uvaflow
 
+RUN apt-get update && apt-get install -y libgomp1
+
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
 COPY source ${INSTALL_DIR}/source
