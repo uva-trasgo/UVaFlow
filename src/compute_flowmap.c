@@ -8,6 +8,7 @@
 #include "interpolation.h"
 #include "compute_flowmap.h"
 #include "rk4.h"
+#include "omp.h"
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +65,8 @@ int main(int argc, char *argv[])
    printf("Reading mesh velocity data...      ");
    read_velocity(argv[8], &mesh); 
    printf("DONE\n"); fflush(stdout);
+
+   printf("Computing the flowmap with %d threads... ", omp_get_num_threads());
 
    /* Set variables where we want to solve the IVP (coords and time) */
    npoints = mesh.nPoints;
@@ -209,6 +212,7 @@ int main(int argc, char *argv[])
    }
 
    gettimeofday(&end, NULL);
+   printf("DONE\n");
 
    /* Show execution time */
    time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)/1000000.0;
