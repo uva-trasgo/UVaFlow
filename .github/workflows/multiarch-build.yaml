@@ -74,7 +74,6 @@ jobs:
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=${{ env.IMAGE_VERSION }}-arm64
-            type=sha
 
           # prefix=amd64-
           # type=sha
@@ -143,7 +142,6 @@ jobs:
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=${{ env.IMAGE_VERSION }}-arm64
-            type=sha
 
           # prefix=amd64-
           # type=sha
@@ -287,7 +285,6 @@ jobs:
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=${{ env.IMAGE_VERSION }}-amd64
-            type=sha
             
           # prefix=amd64-
           # type=sha
