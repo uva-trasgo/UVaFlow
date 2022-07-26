@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
    printf("Reading mesh points coordinates... ");
    read_coordinates(argv[5], &mesh); 
    printf("DONE\n"); fflush(stdout);
-   printf("Reading mesh faces faces...     ");
+   printf("Reading mesh faces faces...        ");
    read_faces(argv[6], &mesh); 
    printf("DONE\n"); fflush(stdout);
    printf("Reading mesh times...              ");
