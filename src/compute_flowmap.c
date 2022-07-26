@@ -66,7 +66,11 @@ int main(int argc, char *argv[])
    read_velocity(argv[8], &mesh); 
    printf("DONE\n"); fflush(stdout);
 
-   printf("Computing the flowmap with %d threads... ", omp_get_num_threads());
+   #pragma omp parallel
+   {
+	if ( omp_get_thread_num() == 0 )
+		printf("Computing the flowmap with %d threads... ", omp_get_num_threads()); fflush(stdout);
+   }
 
    /* Set variables where we want to solve the IVP (coords and time) */
    npoints = mesh.nPoints;
