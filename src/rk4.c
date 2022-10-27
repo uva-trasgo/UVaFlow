@@ -82,12 +82,5 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, mesh_t *mesh, doub
 	if ( mesh->nDim == 3 ) x0[2] += h;
    }
 	//printf("Point %f, %f, result %f, %f\n", Pcoords[0], Pcoords[1], result[0], result[1]);
-/*
-   free(k1);
-   free(k2);
-   free(k3);
-   free(k4);
-   free(newP);
-   free(x0);
-*/
+
 }
