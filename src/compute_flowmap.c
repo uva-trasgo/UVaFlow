@@ -4,23 +4,20 @@
 #include <sys/time.h>
 #include <time.h>
 #include "read_python_files.h"
-#include "velocity.h"
 #include "interpolation.h"
-#include "compute_flowmap.h"
 #include "rk4.h"
 #include "omp.h"
+#include "kdtree.h"
 
 int main(int argc, char *argv[])
 {
    // Check usage
-   if (argc != 13)
+   if (argc != 11)
    {
-	printf("USAGE: ./executable <nDim> <ntimes_eval> <t0_eval> <tdelta_eval> <coords_file> <faces_file> <times_file> <vel_file> <nsteps_rk4> <sched_policy> <print>\n");
-	printf("\texecutable:  compute_flowmap (sequential)\n");
-	printf("\tnDim:        dimensions of the space (2D/3D)\n");
-	printf("\tntimes_eval: quantity of t values to choose (starting at t0 and adding tdelta each time) which we want to evaluate.\n");
-	printf("\tt0_eval:      first t to evaluate.\n");
-	printf("\ttdelta_eval:  t increment in each t to evaluate after t0.\n");
+	printf("USAGE: ./executable <nDim> <t_eval> <coords_file> <faces_file> <times_file> <vel_file> <nsteps_rk4> <sched_policy> <chunk_size> <print>\n");
+	printf("\texecutable:   compute_flowmap (sequential)\n");
+	printf("\tnDim:         dimensions of the space (2D/3D)\n");
+	printf("\tt_eval:       t to evaluate.\n");
 	printf("\tcoords_file:  file where mesh coordinates are stored.\n");
         printf("\tfaces_file:   file where mesh faces are stored.\n");
         printf("\ttimes_file:   file where original time data are stored.\n");
@@ -32,39 +29,128 @@ int main(int argc, char *argv[])
 	return 1;
    }
 
-   int d, ip, it, npoints, nteval, nsteps_rk4, itprev;
+   int d, ip, it, itprev;
 
-   FILE *fp_w;   
+   FILE  *fp_w;   
 
-   double    t0, tdelta, time, t_start;
+   int    nDim;
+   int    nPoints;
+   int    nTimes;
+   int    nFaces;
+   int    nVertsPerFace;
+   int    policy;
+   int    sched_chunk_size;
+   int    nsteps_rk4;
+
+   double t_eval;
+   double time;
+
+   int    *faces;
+   double *coords;
+   double *times;
+   double *velocities;
 
    struct timeval start;
    struct timeval end;
 
+   int  check_EOF;
+   char buffer[255];
+   FILE *file;
 
-   int policy = atoi(argv[10]);
-   int sched_chunk_size = atoi(argv[11]);
+   /* Mesh dimension obtained (from input arguments) */
+   /* Number of vertices per face according to dim   */
+   nDim = atoi(argv[1]);
+   if ( nDim == 2 )
+   {
+      nVertsPerFace = 3; // 2D: faces are triangles
+   }
+   else
+   {
+      if ( nDim == 3)
+      {
+         nVertsPerFace = 4; // 3D: faces (volumes) are tetrahedrons
+      }
+      else
+      {
+         printf("Wrong dimension provided (2 or 3 supported)\n"); 
+         return 1;
+      }
+   }
 
-   mesh_t mesh;
-   mesh.nDim = atoi(argv[1]);
-   
+   /* Time instant to evaluate (from input arguments) */
+   t_eval = atof(argv[2]);
 
-   if ( mesh.nDim == 2 ) mesh.nVertsPerFace = 3; // 2D: faces are triangles
-   else mesh.nVertsPerFace = 4; // 3D: faces (volumes) are tetrahedrons
+   /* Read coordinates, faces, times and velocities information                    */
+   /* from the Python-generated files and generate the corresponding coords vector */
 
-   /* Read coordinates, faces, time values and velocity data from Python-generated files */
-   printf("Reading mesh points coordinates... ");
-   read_coordinates(argv[5], &mesh); 
-   printf("DONE\n"); fflush(stdout);
-   printf("Reading mesh faces faces...        ");
-   read_faces(argv[6], &mesh); 
-   printf("DONE\n"); fflush(stdout);
-   printf("Reading mesh times...              ");
-   read_time(argv[7], &mesh); 
-   printf("DONE\n"); fflush(stdout);
-   printf("Reading mesh velocity data...      ");
-   read_velocity(argv[8], &mesh); 
-   printf("DONE\n"); fflush(stdout);
+   // 1. Get nPoints
+   file = fopen( argv[3], "r" );
+   check_EOF = fscanf(file, "%s", buffer);
+   if ( check_EOF == EOF )
+   {
+      fprintf( stderr, "Error: Unexpected EOF in read_coordinates\n" );
+      exit(-1);
+   }
+   nPoints = atoi(buffer);
+   close(file);
+
+   // 2. Get nFaces
+   file = fopen( argv[4], "r" );
+   check_EOF = fscanf(file, "%s", buffer);
+   if ( check_EOF == EOF )
+   {
+      fprintf( stderr, "Error: Unexpected EOF in read_faces\n" );
+      exit(-1);
+   }
+   nFaces = atoi(buffer);   
+   close(file);
+
+   // 3. Get nTimes
+   file = fopen( argv[5], "r" );
+   check_EOF = fscanf(file, "%s", buffer);
+   if ( check_EOF == EOF )
+   {
+      fprintf( stderr, "Error: Unexpected EOF in read_times\n" );
+      exit(-1);
+   }
+   nTimes = atoi(buffer);
+   close(file);
+
+   // 4. Read mesh coords values from the given file
+   printf("Reading mesh points coordinates...                     ");
+   coords = (double *) malloc ( sizeof(double) * nPoints * nDim );
+   read_coordinates(argv[3], nDim, nPoints, coords); 
+   printf("DONE\n");
+
+   // 5. Read mesh faces values from the given file
+   printf("Reading mesh faces vertices...                         "); 
+   faces = (int *) malloc ( sizeof(int) * nFaces * nVertsPerFace );
+   read_faces(argv[4], nDim, nVertsPerFace, nFaces, faces); 
+   printf("DONE\n");
+
+   // 6. Read time values from the given file
+   printf("Reading known time values...                           ");
+   times = (double *) malloc ( sizeof(double) * nTimes );
+   read_times(argv[5], nTimes, times);
+   printf("DONE\n");
+
+   // 7. Read velocities from the given file
+   printf("Reading known velocity values...                           ");fflush(stdout);
+   velocities = (double *) malloc ( sizeof(double) * nTimes * nPoints * nDim );
+   read_velocities(argv[6], nPoints, nDim, nTimes, coords, velocities);
+   printf("DONE\n");
+
+   /* Set number of steps of each RK4 function call */
+   nsteps_rk4 = atoi(argv[7]);
+ 
+   /* Set scheduling policy and its chunk size */
+   policy = atoi(argv[8]);
+   if ( policy < 1 || policy > 4 )
+   {
+      printf("Wrong sched policy. Should be a 1-4 value.\nSEQUENTIAL (1) / OMP_STATIC (2) / OMP_DYNAMIC (3) / OMP_GUIDED (4)\n");
+      return 1;
+   }
+   sched_chunk_size = atoi(argv[9]);
 
    #pragma omp parallel
    {
@@ -72,140 +158,131 @@ int main(int argc, char *argv[])
 		printf("Computing the flowmap with %d threads... ", omp_get_num_threads()); fflush(stdout);
    }
 
-   /* Set variables where we want to solve the IVP (coords and time) */
-   npoints = mesh.nPoints;
-   nteval  = atoi(argv[2]);
-
-   double t_eval[nteval];
-
-   t0     = atof(argv[3]);
-   tdelta = atof(argv[4]);
-   for ( it = 0; it < nteval; it++ )
-   {
-      t_eval[it] = t0 + tdelta * it;
-   }
-
-   /* Set number of steps of each RK4 function call */
-   nsteps_rk4 = atoi(argv[9]);
-
    /* Solve IVPs (using RK4) */
-   double *result = malloc( sizeof(double) * npoints * nteval * mesh.nDim );
+   double *result = malloc( sizeof(double) * nPoints * nDim );
    if ( policy == 1 )
    {
       gettimeofday(&start, NULL);
-      for ( ip = 0; ip < npoints; ip++ )
+      for ( ip = 0; ip < nPoints; ip++ )
       {
-         for ( it = 0; it < nteval; it++ )
-         {
-	    result[ip * nteval * mesh.nDim + it * mesh.nDim] = mesh.points[ip].coordinates[0];
-	    result[ip * nteval * mesh.nDim + it * mesh.nDim + 1] = mesh.points[ip].coordinates[1];
-            if (mesh.nDim == 3) result[ip * nteval * mesh.nDim + it * mesh.nDim + 2] = mesh.points[ip].coordinates[2];
+	    //printf("ip %d\n", ip); fflush(stdout);
+	    result[ip * nDim]     = coords[ip * nDim];
+	    result[ip * nDim + 1] = coords[ip * nDim + 1];
+            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
 	    itprev = 0;
-            while ( itprev+1 < mesh.nTimes && mesh.times[itprev+1] < t_eval[it] )
+            while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
+		//printf("itprev %d\n", itprev);
 	       itprev++;
-               runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ], 
-                         mesh.times[itprev-1],
-                         mesh.times[itprev], 
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ], 
-                         nsteps_rk4);
+               runge_kutta_4 ( &result[ ip * nDim ], 
+                         times[itprev-1],
+                         times[itprev], 
+                         &result[ ip * nDim ], 
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times, 
+			 nVertsPerFace, nFaces, faces, coords, velocities);
             }
-            runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev],
-                         t_eval[it],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
-         }
+            runge_kutta_4 ( &result[ ip * nDim ],
+                         times[itprev],
+                         t_eval,
+                         &result[ ip * nDim ],
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
       }
       gettimeofday(&end, NULL);
    }
    else if ( policy == 2 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(npoints, nteval, mesh, t_eval, nsteps_rk4, result, sched_chunk_size) private(ip, it, itprev) schedule(static, sched_chunk_size)
-      for ( ip = 0; ip < npoints; ip++ )
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static, sched_chunk_size)
+      for ( ip = 0; ip < nPoints; ip++ )
       {
-         for ( it = 0; it < nteval; it++ )
-         {
-            result[ip * nteval * mesh.nDim + it * mesh.nDim] = mesh.points[ip].coordinates[0];
-            result[ip * nteval * mesh.nDim + it * mesh.nDim + 1] = mesh.points[ip].coordinates[1];
-            if (mesh.nDim == 3) result[ip * nteval * mesh.nDim + it * mesh.nDim + 2] = mesh.points[ip].coordinates[2];
+		//printf("ip %d\n", ip);
+            result[ip * nDim]     = coords[ip * nDim]; 
+            result[ip * nDim + 1] = coords[ip * nDim + 1];
+            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
             itprev = 0;
-            while ( itprev+1 < mesh.nTimes && mesh.times[itprev+1] < t_eval[it] )
+            while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev-1],
-                         mesh.times[itprev],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
+               runge_kutta_4 ( &result[ ip * nDim ],                               
+                         times[itprev-1],
+                         times[itprev],      
+                         &result[ ip * nDim ],                                      
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
             }
-            runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev],
-                         t_eval[it],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
-         }
+            runge_kutta_4 ( &result[ ip * nDim ],
+                         times[itprev],
+                         t_eval,
+                         &result[ ip * nDim ],
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
       }
       gettimeofday(&end, NULL);
    }
    else if ( policy == 3 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(npoints, nteval, mesh, t_eval, nsteps_rk4, result, sched_chunk_size) private(ip, it, itprev) schedule(dynamic, sched_chunk_size)
-      for ( ip = 0; ip < npoints; ip++ )
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic, sched_chunk_size)
+      for ( ip = 0; ip < nPoints; ip++ )
       {
-         for ( it = 0; it < nteval; it++ )
-         {
-            result[ip * nteval * mesh.nDim + it * mesh.nDim] = mesh.points[ip].coordinates[0];
-            result[ip * nteval * mesh.nDim + it * mesh.nDim + 1] = mesh.points[ip].coordinates[1];
-            if (mesh.nDim == 3) result[ip * nteval * mesh.nDim + it * mesh.nDim + 2] = mesh.points[ip].coordinates[2];
+            result[ip * nDim]     = coords[ip * nDim]; 
+            result[ip * nDim + 1] = coords[ip * nDim + 1];
+            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
             itprev = 0;
-            while ( itprev+1 < mesh.nTimes && mesh.times[itprev+1] < t_eval[it] )
+            while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev-1],
-                         mesh.times[itprev],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
+               runge_kutta_4 ( &result[ ip * nDim ],                               
+                         times[itprev-1],
+                         times[itprev],      
+                         &result[ ip * nDim ],                                      
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
             }
-            runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev],
-                         t_eval[it],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
-         }
+            runge_kutta_4 ( &result[ ip * nDim ],
+                         times[itprev],
+                         t_eval,
+                         &result[ ip * nDim ],
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
       }
       gettimeofday(&end, NULL);
    }
    else if ( policy == 4 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(npoints, nteval, mesh, t_eval, nsteps_rk4, result, sched_chunk_size) private(ip, it, itprev) schedule(guided, sched_chunk_size)
-      for ( ip = 0; ip < npoints; ip++ )
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided, sched_chunk_size)
+      for ( ip = 0; ip < nPoints; ip++ )
       {
-         for ( it = 0; it < nteval; it++ )
-         {
-            result[ip * nteval * mesh.nDim + it * mesh.nDim] = mesh.points[ip].coordinates[0];
-            result[ip * nteval * mesh.nDim + it * mesh.nDim + 1] = mesh.points[ip].coordinates[1];
-            if (mesh.nDim == 3) result[ip * nteval * mesh.nDim + it * mesh.nDim + 2] = mesh.points[ip].coordinates[2];
+            result[ip * nDim]     = coords[ip * nDim]; 
+            result[ip * nDim + 1] = coords[ip * nDim + 1];
+            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
             itprev = 0;
-            while ( itprev+1 < mesh.nTimes && mesh.times[itprev+1] < t_eval[it] )
+            while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev-1],
-                         mesh.times[itprev],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
+               runge_kutta_4 ( &result[ ip * nDim ],                               
+                         times[itprev-1],
+                         times[itprev],      
+                         &result[ ip * nDim ],                                      
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
             }
-            runge_kutta_4 ( &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         mesh.times[itprev],
-                         t_eval[it],
-                         &mesh, &result[ ip * nteval * mesh.nDim + it * mesh.nDim ],
-                         nsteps_rk4);
-         }
+            runge_kutta_4 ( &result[ ip * nDim ],
+                         times[itprev],
+                         t_eval,
+                         &result[ ip * nDim ],
+                         nsteps_rk4,
+			 nDim, nPoints, nTimes, times,
+			 nVertsPerFace, nFaces, faces, coords, velocities);
       }
       gettimeofday(&end, NULL);
    }
@@ -215,39 +292,33 @@ int main(int argc, char *argv[])
       exit(-1);
    }
 
-   gettimeofday(&end, NULL);
    printf("DONE\n");
 
    /* Show execution time */
    time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)/1000000.0;
-   printf("Exec time (npoints %d, ntimes %d) = %f\n", npoints, nteval, time);
+   printf("Exec time (nPoints %d) = %f\n", nPoints, time);
 
    /* Print res to file */
-   if ( atoi(argv[12]) )
+   if ( atoi(argv[10]) )
    {
-      double fsolfmx = 0, fsolfmy = 0, fsol_sum = 0;
       fp_w = fopen("output_for_ftle.csv", "w");
-      for ( ip = 0; ip < npoints; ip++)
+      for ( ip = 0; ip < nPoints; ip++)
       {
-         for ( it = 0; it < nteval; it++ )
-         {
-	    if ( mesh.nDim == 2 )
+	    if ( nDim == 2 )
    	    {
-	       fsolfmx += result[ip*nteval*mesh.nDim + it*mesh.nDim];
-	       fsolfmy += result[ip*nteval*mesh.nDim + it*mesh.nDim+1];
-	       fprintf(fp_w, "%1.14lf\n%1.14lf\n", result[ip*nteval*mesh.nDim + it*mesh.nDim], result[ip*nteval*mesh.nDim + it*mesh.nDim+1]);
+	       fprintf(fp_w, "%1.14lf\n%1.14lf\n", 
+                        result[ip*nDim], 
+                        result[ip*nDim+1]);
 	    }
 	    else
             {
 	       fprintf(fp_w, "%1.14lf\n%1.14lf\n%1.14lf\n", 
-			result[ip*nteval*mesh.nDim + it*mesh.nDim], 
-			result[ip*nteval*mesh.nDim + it*mesh.nDim+1],
-			result[ip*nteval*mesh.nDim + it*mesh.nDim+2]);
+			result[ip*nDim], 
+			result[ip*nDim+1],
+			result[ip*nDim+2]);
             }
-         }
       }
       fclose(fp_w);
-      printf("Fsol fmx: %f, fsol fmy: %f, fsol sum: %f\n", fsolfmx, fsolfmy, fsolfmx+fsolfmy);
    }
    free (result);
 
