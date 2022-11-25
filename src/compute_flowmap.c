@@ -139,7 +139,17 @@ int main(int argc, char *argv[])
    velocities = (double *) malloc ( sizeof(double) * nTimes * nPoints * nDim );
    read_velocities(argv[6], nPoints, nDim, nTimes, coords, velocities);
    printf("DONE\n");
-
+/*
+   printf("nPoints %d, nTimes %d, nfaces %d, nvpf %d\n", nPoints, nTimes, nFaces, nVertsPerFace);
+   for ( ip = 0; ip< 10; ip++)
+      printf("Point %d - coords %f %f\n", ip, coords[ip*nDim], coords[ip*nDim+1]);
+   for ( it = 0; it< 10; it++)
+      printf("Time %d --> %f\n", it, times[it]);
+   for ( ip = 0; ip< 10; ip++)
+      printf("Face %d - verts %d %d %d\n", ip, faces[ip*nVertsPerFace], faces[ip*nVertsPerFace+1], faces[ip*nVertsPerFace+2]);
+   for ( ip = 0; ip< 10; ip++)
+      printf("Vel %f %f\n", velocities[ip*nDim], velocities[ip*nDim+1]);
+*/
    /* Set number of steps of each RK4 function call */
    nsteps_rk4 = atoi(argv[7]);
  
@@ -221,6 +231,7 @@ int main(int argc, char *argv[])
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
 			 nVertsPerFace, nFaces, faces, coords, velocities);
+      		if (isnan(result[ ip * nDim ]) || isnan(result[ ip * nDim + 1 ]) || isnan(result[ ip * nDim + 2])) printf("NAN in p %d %f %f %f\n", ip, isnan(result[ ip * nDim ]), isnan(result[ ip * nDim+1 ]), isnan(result[ ip * nDim +2]));
       }
       gettimeofday(&end, NULL);
    }
@@ -307,15 +318,15 @@ int main(int argc, char *argv[])
 	    if ( nDim == 2 )
    	    {
 	       fprintf(fp_w, "%1.14lf\n%1.14lf\n", 
-                        result[ip*nDim], 
-                        result[ip*nDim+1]);
+                        result[ ip * nDim ], 
+                        result[ ip * nDim + 1]);
 	    }
 	    else
             {
 	       fprintf(fp_w, "%1.14lf\n%1.14lf\n%1.14lf\n", 
-			result[ip*nDim], 
-			result[ip*nDim+1],
-			result[ip*nDim+2]);
+			result[ ip * nDim ], 
+			result[ ip * nDim + 1],
+			result[ ip * nDim + 2]);
             }
       }
       fclose(fp_w);

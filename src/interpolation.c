@@ -32,12 +32,6 @@ void interpolate_triangle (   double *V1, double *velV1,
 {
    double denom, wv1, wv2, wv3;
 
-   if (nDim == 3)
-   {
-      fprintf(stderr, "nDim == 3 not supported in interpolate yet\n");
-      exit(-1);
-   }
-
    denom = (V2[1]-V3[1]) * (V1[0]-V3[0]) + (V3[0]-V2[0]) * (V1[1]-V3[1]);
    wv1   = (V2[1]-V3[1]) * (P[0]-V3[0])  + (V3[0]-V2[0]) * (P[1]-V3[1]);
    wv1   = wv1 / denom;
