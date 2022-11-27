@@ -4,7 +4,25 @@
 #include "location.h"
 #include "distance.h"
 
-int find_point_simplex_in_mesh ( double *Pcoords, int nDim, int nFaces, int nVertsPerFace, double *coords, int *faces )
+int find_point_simplex_in_mesh_2D ( double *Pcoords, int nDim, int nFaces, int nVertsPerFace, double *coords_x, double *coords_y, int *faces )
+{
+   int res = -1;
+   int iface, iv1, iv2, iv3, search_face = 1;
+   for ( iface = 0; iface < nFaces && search_face; iface++ )
+   {
+      iv1 = faces[iface*nVertsPerFace];
+      iv2 = faces[iface*nVertsPerFace+1];
+      iv3 = faces[iface*nVertsPerFace+2];
+      if ( p_inside_triangle(iv1, iv2, iv3, coords_x, coords_y, Pcoords, nDim) )
+      {
+         search_face = 0;
+	 res = iface;
+      }
+   }
+   return res;
+}
+
+int find_point_simplex_in_mesh_3D ( double *Pcoords, int nDim, int nFaces, int nVertsPerFace, double *coords_x, double *coords_y, double *coords_z, int *faces )
 {
    int res = -1;
    int iface, iv1, iv2, iv3, iv4, search_face = 1;
@@ -14,12 +32,7 @@ int find_point_simplex_in_mesh ( double *Pcoords, int nDim, int nFaces, int nVer
       iv2 = faces[iface*nVertsPerFace+1];
       iv3 = faces[iface*nVertsPerFace+2];
       iv4 = faces[iface*nVertsPerFace+3];
-      if ( (nDim == 2) && (p_inside_triangle(&coords[iv1*nDim], &coords[iv2*nDim], &coords[iv3*nDim], Pcoords, nDim)) )
-      {
-         search_face = 0;
-	 res = iface;
-      }
-      else if ( (nDim == 3) && (p_inside_tetrahedron(&coords[iv1*nDim], &coords[iv2*nDim], &coords[iv3*nDim], &coords[iv4*nDim], Pcoords, nDim)) )
+      if ( p_inside_tetrahedron(iv1, iv2, iv3, iv4, coords_x, coords_y, coords_z, Pcoords, nDim) )
       {
          search_face = 0;
          res = iface;
@@ -28,23 +41,33 @@ int find_point_simplex_in_mesh ( double *Pcoords, int nDim, int nFaces, int nVer
    return res;
 }
 
-int find_point_in_mesh ( double *Pcoords, int nDim, int nPoints, double *coords )
+int find_point_in_mesh_2D ( double *Pcoords, int nDim, int nPoints, double *coords_x, double *coords_y )
 {
    int i, pindex = -1;
    for ( i = 0; i < nPoints && pindex < 0; i++ )
    {
-      if ( (coords[i*nDim] == Pcoords[0]) && (coords[i*nDim+1] == Pcoords[1]) )
+      if ( (coords_x[i] == Pcoords[0]) && (coords_y[i] == Pcoords[1]) )
       {
-         if ( (nDim == 2) || ( (nDim == 3) && (coords[i*nDim+2] == Pcoords[2]) ) )
-         {
             pindex = i;
-         }
       }
    }
    return pindex;
 }
 
-int p_inside_triangle ( double *V1, double *V2, double *V3, double *P, int nDim )
+int find_point_in_mesh_3D ( double *Pcoords, int nDim, int nPoints, double *coords_x, double *coords_y, double *coords_z )
+{
+   int i, pindex = -1;
+   for ( i = 0; i < nPoints && pindex < 0; i++ )
+   {
+      if ( (coords_x[i] == Pcoords[0]) && (coords_y[i] == Pcoords[1]) && (coords_z[i] == Pcoords[2]) )
+      {
+            pindex = i;
+      }
+   }
+   return pindex;
+}
+
+int p_inside_triangle ( int iv1, int iv2, int iv3, double *coords_x, double *coords_y, double *P, int nDim )
 {
    double v0[nDim];
    double v1[nDim];
@@ -52,12 +75,12 @@ int p_inside_triangle ( double *V1, double *V2, double *V3, double *P, int nDim 
    double dot00, dot01, dot02, dot11, dot12, invDenom, u, v;
 
    // Compute vectors v0, v1, v2
-   v0[0] = V3[0] - V1[0];
-   v0[1] = V3[1] - V1[1];
-   v1[0] = V2[0] - V1[0];
-   v1[1] = V2[1] - V1[1];
-   v2[0] = P[0]  - V1[0];
-   v2[1] = P[1]  - V1[1];
+   v0[0] = coords_x[iv3] - coords_x[iv1];
+   v0[1] = coords_y[iv3] - coords_y[iv1];
+   v1[0] = coords_x[iv2] - coords_x[iv1];
+   v1[1] = coords_y[iv2] - coords_y[iv1];
+   v2[0] = P[0]          - coords_x[iv1];
+   v2[1] = P[1]          - coords_y[iv1];
 
    // Compute dot products
    dot00 = v0[0]*v0[0] + v0[1]*v0[1];
@@ -109,9 +132,14 @@ int share_side ( double *V1, double *V2, double *V3, double *V4, double *P, int 
 
 }
 
-int p_inside_tetrahedron ( double *V1, double *V2, double *V3, double *V4, double *P, int nDim )
+int p_inside_tetrahedron ( int iv1, int iv2, int iv3, int iv4, double *coords_x, double *coords_y, double *coords_z, double *P, int nDim )
 {
-   
+   double V1[3], V2[3], V3[3], V4[3];
+   V1[0] = coords_x[iv1]; V1[1] = coords_y[iv1]; V1[2] = coords_z[iv1];
+   V2[0] = coords_x[iv2]; V2[1] = coords_y[iv2]; V2[2] = coords_z[iv2];
+   V3[0] = coords_x[iv3]; V3[1] = coords_y[iv3]; V3[2] = coords_z[iv3];
+   V4[0] = coords_x[iv4]; V4[1] = coords_y[iv4]; V4[2] = coords_z[iv4];
+
    int share_1234P = share_side ( V1, V2, V3, V4, P, nDim );
    int share_2341P = share_side ( V2, V3, V4, V1, P, nDim );
    int share_3412P = share_side ( V3, V4, V1, V2, P, nDim );

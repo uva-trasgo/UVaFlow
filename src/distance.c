@@ -3,11 +3,13 @@
 #include <math.h>
 #include "distance.h"
 
-double distance_PQ ( int nDim, double *P, double *Q )
+double distance_PQ_2D ( int nDim, double Px, double Py, double *Q )
 {
-   double distance = (Q[0]-P[0]) * (Q[0]-P[0]) + (Q[1]-P[1]) * (Q[1]-P[1]);
-   if (nDim == 3)
-      distance += (Q[2]-P[2]) * (Q[2]-P[2]);
-   return sqrt(distance);
+   return sqrt( (Q[0]-Px) * (Q[0]-Px) + (Q[1]-Py) * (Q[1]-Py) );
+}
+
+double distance_PQ_3D ( int nDim, double Px, double Py, double Pz, double *Q )
+{
+   return sqrt( (Q[0]-Px) * (Q[0]-Px) + (Q[1]-Py) * (Q[1]-Py) + (Q[2]-Pz) * (Q[2]-Pz) );
 }
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "read_python_files.h"
 
-void read_coordinates ( char *filename, int nDim, int nPoints, double *coords )
+void read_coordinates ( char *filename, int nDim, int nPoints, double *coords_x, double *coords_y, double *coords_z )
 {
 	int ip, d, check_EOF;
 	char buffer[255];
@@ -22,15 +22,31 @@ void read_coordinates ( char *filename, int nDim, int nPoints, double *coords )
 	// Rest of read elements will be points' coordinates
 	for ( ip = 0; ip < nPoints; ip++ )
 	{
-		for ( d = 0; d < nDim; d++ )
+		check_EOF = fscanf(file, "%s", buffer);
+                if ( check_EOF == EOF )
+                {
+                        fprintf( stderr, "Error: Unexpected EOF in read_coordinates\n" );
+                        exit(-1);
+                }
+                coords_x[ip] = atof(buffer);
+
+		check_EOF = fscanf(file, "%s", buffer);
+                if ( check_EOF == EOF )
+                {
+                        fprintf( stderr, "Error: Unexpected EOF in read_coordinates\n" );
+                        exit(-1);
+                }
+                coords_y[ip] = atof(buffer);
+
+		if ( nDim == 3 )
 		{
 			check_EOF = fscanf(file, "%s", buffer);
-			if ( check_EOF == EOF )
-			{
-				fprintf( stderr, "Error: Unexpected EOF in read_coordinates\n" );
-				exit(-1);
-			}
-			coords[ip * nDim + d] = atof(buffer);
+        	        if ( check_EOF == EOF )
+                	{
+                        	fprintf( stderr, "Error: Unexpected EOF in read_coordinates\n" );
+	                        exit(-1);
+        	        }
+                	coords_z[ip] = atof(buffer);
 		}
 	}
 
@@ -111,7 +127,7 @@ void read_times ( char *filename, int nTimes, double *times)
    fclose(file);
 }
 
-void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double *coords, double *velocity )
+void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double *velocity )
 {
    int ip, it, d, check_EOF;
    //char buffer[255];

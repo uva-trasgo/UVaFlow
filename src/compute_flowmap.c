@@ -46,8 +46,13 @@ int main(int argc, char *argv[])
    double time;
 
    int    *faces;
-   double *coords;
+
+   double *coords_x;
+   double *coords_y;
+   double *coords_z = NULL;
+
    double *times;
+
    double *velocities;
 
    struct timeval start;
@@ -118,8 +123,10 @@ int main(int argc, char *argv[])
 
    // 4. Read mesh coords values from the given file
    printf("Reading mesh points coordinates...                     ");
-   coords = (double *) malloc ( sizeof(double) * nPoints * nDim );
-   read_coordinates(argv[3], nDim, nPoints, coords); 
+   coords_x = (double *) malloc ( sizeof(double) * nPoints );
+   coords_y = (double *) malloc ( sizeof(double) * nPoints );
+   if ( nDim == 3) coords_z = (double *) malloc ( sizeof(double) * nPoints );
+   read_coordinates(argv[3], nDim, nPoints, coords_x, coords_y, coords_z); 
    printf("DONE\n");
 
    // 5. Read mesh faces values from the given file
@@ -137,7 +144,7 @@ int main(int argc, char *argv[])
    // 7. Read velocities from the given file
    printf("Reading known velocity values...                           ");fflush(stdout);
    velocities = (double *) malloc ( sizeof(double) * nTimes * nPoints * nDim );
-   read_velocities(argv[6], nPoints, nDim, nTimes, coords, velocities);
+   read_velocities(argv[6], nPoints, nDim, nTimes, velocities);
    printf("DONE\n");
 /*
    printf("nPoints %d, nTimes %d, nfaces %d, nvpf %d\n", nPoints, nTimes, nFaces, nVertsPerFace);
@@ -176,9 +183,9 @@ int main(int argc, char *argv[])
       for ( ip = 0; ip < nPoints; ip++ )
       {
 	    //printf("ip %d\n", ip); fflush(stdout);
-	    result[ip * nDim]     = coords[ip * nDim];
-	    result[ip * nDim + 1] = coords[ip * nDim + 1];
-            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
+	    result[ip * nDim]     = coords_x[ip];
+	    result[ip * nDim + 1] = coords_y[ip];
+            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
 	    itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -190,7 +197,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ], 
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times, 
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
             }
             runge_kutta_4 ( &result[ ip * nDim ],
                          times[itprev],
@@ -198,20 +206,21 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
       }
       gettimeofday(&end, NULL);
    }
    else if ( policy == 2 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static, sched_chunk_size)
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
 		//printf("ip %d\n", ip);
-            result[ip * nDim]     = coords[ip * nDim]; 
-            result[ip * nDim + 1] = coords[ip * nDim + 1];
-            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
+            result[ip * nDim]     = coords_x[ip]; 
+            result[ip * nDim + 1] = coords_y[ip];
+            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -222,7 +231,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],                                      
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
             }
             runge_kutta_4 ( &result[ ip * nDim ],
                          times[itprev],
@@ -230,7 +240,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
       		if (isnan(result[ ip * nDim ]) || isnan(result[ ip * nDim + 1 ]) || isnan(result[ ip * nDim + 2])) printf("NAN in p %d %f %f %f\n", ip, isnan(result[ ip * nDim ]), isnan(result[ ip * nDim+1 ]), isnan(result[ ip * nDim +2]));
       }
       gettimeofday(&end, NULL);
@@ -238,12 +249,12 @@ int main(int argc, char *argv[])
    else if ( policy == 3 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic, sched_chunk_size)
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-            result[ip * nDim]     = coords[ip * nDim]; 
-            result[ip * nDim + 1] = coords[ip * nDim + 1];
-            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
+            result[ip * nDim]     = coords_x[ip]; 
+            result[ip * nDim + 1] = coords_y[ip];
+            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -254,7 +265,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],                                      
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
             }
             runge_kutta_4 ( &result[ ip * nDim ],
                          times[itprev],
@@ -262,19 +274,20 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
       }
       gettimeofday(&end, NULL);
    }
    else if ( policy == 4 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nPoints, nDim, coords, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided, sched_chunk_size)
+      #pragma omp parallel for default(none) shared(nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-            result[ip * nDim]     = coords[ip * nDim]; 
-            result[ip * nDim + 1] = coords[ip * nDim + 1];
-            if (nDim == 3) result[ip * nDim + 2] = coords[ip * nDim + 2];
+            result[ip * nDim]     = coords_x[ip]; 
+            result[ip * nDim + 1] = coords_y[ip];
+            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -285,7 +298,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],                                      
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
             }
             runge_kutta_4 ( &result[ ip * nDim ],
                          times[itprev],
@@ -293,7 +307,8 @@ int main(int argc, char *argv[])
                          &result[ ip * nDim ],
                          nsteps_rk4,
 			 nDim, nPoints, nTimes, times,
-			 nVertsPerFace, nFaces, faces, coords, velocities);
+			 nVertsPerFace, nFaces, faces, 
+			 coords_x, coords_y, coords_z, velocities);
       }
       gettimeofday(&end, NULL);
    }

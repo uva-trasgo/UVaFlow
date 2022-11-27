@@ -2,7 +2,7 @@
 /* Supported dimensions: 2D, 3D */
 /* NOTE: 1st line of given file must contain mesh->nPoints */
 /* OUT: mesh->points[0...nPoints].coordinates and mesh->points[0...nPoints].index set */
-void read_coordinates ( char *filename, int nDim, int nPoints, double *coords );
+void read_coordinates ( char *filename, int nDim, int nPoints, double *coords_x, double *coords_y, double *coords_z );
 
 /* Function to set all mesh faces read from file "filename" */
 /* Supported dimensions: 2D, 3D */
@@ -19,7 +19,7 @@ void read_time ( char *filename, int nTimes, double *times );
 /* Function to set all mesh points' velocity read from file "filename" */
 /* Supported dimensions: 2D, 3D */
 /* OUT: mesh->points[0...nPoints].velocity set */
-void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double *coords, double *velocity );
+void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double *velocity );
 
 /* Function to set the lists of faces in which each point is a vertex (and nFaces) */
 /* Supported dimensions: 2D, 3D */

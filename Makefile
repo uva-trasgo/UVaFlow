@@ -12,7 +12,7 @@ DIR_src=${DIR}/src
 DIR_bin=${DIR}/bin
 
 # Complementary files
-SRC=${DIR_src}/kdtree.c ${DIR_src}/interpolation.c ${DIR_src}/location.c ${DIR_src}/rk4.c ${DIR_src}/distance.c ${DIR_src}/read_python_files.c
+SRC=${DIR_src}/kdtree.c ${DIR_src}/search.c ${DIR_src}/interpolation.c ${DIR_src}/location.c ${DIR_src}/rk4.c ${DIR_src}/distance.c ${DIR_src}/read_python_files.c
 
 # Include header files
 INC=./include

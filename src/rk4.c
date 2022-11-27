@@ -6,7 +6,7 @@
 #include "rk4.h"
 #include "interpolation.h"
 
-void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, int nsteps, int nDim, int nPoints, int nTimes, double *times, int nVertsPerFace, int nFaces, int *faces, double *coords, double *velocities) //, int it )
+void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, int nsteps, int nDim, int nPoints, int nTimes, double *times, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double *velocities) //, int it )
 {
    int i;
    struct timeval start;
@@ -35,7 +35,11 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
    {
 	/* K1 */
 	//printf("K1\n");
-   	linear_interpolation_approach2 ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords, velocities );
+	if ( nDim == 2 ) 
+	   	linear_interpolation_approach2_2D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
+	else
+		linear_interpolation_approach2_3D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+
    	k1[0] = k1[0] * h;
    	k1[1] = k1[1] * h;
 	if ( nDim == 3 ) k1[2] = k1[2] * h;
@@ -43,10 +47,15 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	/* K2 */
    	newP[0] = x0[0] + 1/2 * k1[0];
    	newP[1] = x0[1] + 1/2 * k1[1];
-        if ( nDim == 3 ) newP[2] = x0[2] + 1/2 * k1[2];
+        if ( nDim == 3 )
+	{
+		newP[2] = x0[2] + 1/2 * k1[2];
+		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+	}
+	else
+		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
 	//printf("K2\n");
 
-   	linear_interpolation_approach2 ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords, velocities );
 
    	k2[0] = k2[0] * h;
    	k2[1] = k2[1] * h;
@@ -55,10 +64,15 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	/* K3 */  
    	newP[0] = x0[0] + 1/2 * k2[0];
    	newP[1] = x0[1] + 1/2 * k2[1];
-	if ( nDim == 3 ) newP[2] = x0[2] + 1/2 * k2[2];
+	if ( nDim == 3 )
+	{
+		newP[2] = x0[2] + 1/2 * k2[2];
+		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+	}
+	else
+		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
 	//printf("K3\n");
 
-   	linear_interpolation_approach2 ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords, velocities );
 
    	k3[0] = k3[0] * h;
   	k3[1] = k3[1] * h;
@@ -67,10 +81,15 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	/* K4 */
    	newP[0] = x0[0] + k3[0];
    	newP[1] = x0[1] + k3[1];
-	if ( nDim == 3 ) newP[2] = x0[2] + k3[2];
+	if ( nDim == 3 )
+	{
+		newP[2] = x0[2] + k3[2];
+		linear_interpolation_approach2_3D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+	}
+	else
+		linear_interpolation_approach2_2D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
 	//printf("K4\n");
 
-   	linear_interpolation_approach2 ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords, velocities );
 
    	k4[0] = k4[0] * h;
         k4[1] = k4[1] * h;
