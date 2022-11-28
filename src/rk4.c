@@ -6,7 +6,7 @@
 #include "rk4.h"
 #include "interpolation.h"
 
-void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, int nsteps, int nDim, int nPoints, int nTimes, double *times, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double *velocities) //, int it )
+void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, int nsteps, int nDim, int nPoints, int nTimes, double *times, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double *velocities, void *kdtree, int *nFacesPerPoint, int *facesPerPoint) //, int it )
 {
    int i;
    struct timeval start;
@@ -36,9 +36,9 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	/* K1 */
 	//printf("K1\n");
 	if ( nDim == 2 ) 
-	   	linear_interpolation_approach2_2D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
+	   	linear_interpolation_approach2_2D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	else
-		linear_interpolation_approach2_3D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+		linear_interpolation_approach2_3D ( t0, x0, times, k1, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 
    	k1[0] = k1[0] * h;
    	k1[1] = k1[1] * h;
@@ -50,10 +50,10 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
         if ( nDim == 3 )
 	{
 		newP[2] = x0[2] + 1/2 * k1[2];
-		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	}
 	else
-		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
+		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k2, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	//printf("K2\n");
 
 
@@ -67,10 +67,10 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	if ( nDim == 3 )
 	{
 		newP[2] = x0[2] + 1/2 * k2[2];
-		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+		linear_interpolation_approach2_3D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	}
 	else
-		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
+		linear_interpolation_approach2_2D ( t0+h/2.0, newP, times, k3, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	//printf("K3\n");
 
 
@@ -84,10 +84,10 @@ void runge_kutta_4 ( double *Pcoords, double t0, double tend, double *result, in
 	if ( nDim == 3 )
 	{
 		newP[2] = x0[2] + k3[2];
-		linear_interpolation_approach2_3D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities );
+		linear_interpolation_approach2_3D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	}
 	else
-		linear_interpolation_approach2_2D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities );
+		linear_interpolation_approach2_2D ( t0+h, newP, times, k4, nDim, nPoints, nTimes, nVertsPerFace, nFaces, faces, coords_x, coords_y, velocities, kdtree, nFacesPerPoint, facesPerPoint );
 	//printf("K4\n");
 
 

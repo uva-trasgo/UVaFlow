@@ -5,6 +5,7 @@
 #include "location.h"
 #include "distance.h"
 #include "search.h"
+#include "kdtree.h"
 
 int reset_coordinates_2D ( int nDim, int nPoints, double *coords_x, double *coords_y, double *Pcoords )
 {
@@ -121,10 +122,12 @@ void interpolate_3D_tetrahedral ( double *coords_x, double *coords_y, double *co
 	}
 }
 
-void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double*velocities)
+void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double*velocities, void *kdtree, int *nFacesPerPoint, int *facesPerPoint)
 {
    int ip, iface, itime, itprev, itpost, tsearch = 1;
-   int iv1, iv2, iv3, iv4;
+   int nFacesNearestPoint, ifp, fsearch, faceNearestPoint;
+   int iv1, iv2, iv3;
+
    double t0, t1;
    double v0[nDim];
    double v1[nDim];
@@ -132,13 +135,44 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
    double interp2[nDim];
    double interp3[nDim];
 
-   tsearch = binarySearch(times, nTimes, t, &itime);
+   double pos[2];
+   int data;
 
-   ip = find_point_in_mesh_2D ( Pcoords, nDim, nPoints, coords_x, coords_y );
+   struct kdres *nearest;
+
+   tsearch = binarySearch(times, nTimes, t, &itime);
+   nearest = kd_nearest (kdtree, Pcoords);
+   data    = kd_res_item(nearest, pos);
+
+   if ( pos[0] != Pcoords[0] || pos[1] != Pcoords[1] )
+   {
+      ip = -1;
+   }
+   else
+   {
+      ip = data;
+   }
+
    if ( ip == -1 ) // P is not a mesh point
    {
-      iface = find_point_simplex_in_mesh_2D ( Pcoords, nDim, nFaces, nVertsPerFace, coords_x, coords_y, faces);
-      if (iface > -1) // There is a mesh face or volume containing given point
+      // TODO (future): Consider closest point might not belong to the triangle containing the given point
+      iface = -1;
+      data > 0 ? nFacesNearestPoint = nFacesPerPoint[data] - nFacesPerPoint[data-1] : nFacesPerPoint[0];
+      fsearch = 1;
+      for ( ifp = 0; ifp < nFacesNearestPoint && fsearch; ifp++ )
+      {
+         data > 0 ? faceNearestPoint = facesPerPoint[nFacesPerPoint[data-1]+ifp] : facesPerPoint[ifp];
+         iv1 = faces[faceNearestPoint*nVertsPerFace];
+         iv2 = faces[faceNearestPoint*nVertsPerFace+1];
+         iv3 = faces[faceNearestPoint*nVertsPerFace+2];
+	 if ( p_inside_triangle ( iv1, iv2, iv3, coords_x, coords_y, Pcoords, nDim ) )
+	 {
+	    iface = faceNearestPoint;
+            fsearch = 0;
+         }
+      } 
+
+      if (iface > -1) // There is a mesh face or volume containing the given point
       {
          // Find closest time values in mesh->times array and interpolate
 	 if (tsearch) // times[itime] == t // t exists in the mesh times elements
@@ -150,12 +184,6 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
 		interpolate_triangle (  coords_x, coords_y, velocities, 
 					iv1, iv2, iv3, itime, 
 					nPoints, Pcoords, interpolation, nDim );
-			/*
-			interpolate_triangle ( &coords[iv1 * nDim], &velocities[itime * nPoints * nDim + iv1 * nDim],
-					       &coords[iv2 * nDim], &velocities[itime * nPoints * nDim + iv2 * nDim],
-					       &coords[iv3 * nDim], &velocities[itime * nPoints * nDim + iv3 * nDim],
-                                               Pcoords, interpolation, nDim );
-			*/
             }
             else
             {
@@ -177,17 +205,6 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
 			interpolate_triangle ( coords_x, coords_y, velocities,
                                         iv1, iv2, iv3, itpost,
                                         nPoints, Pcoords, interp2, nDim );
-
-			/*
-                        interpolate_triangle ( &coords[iv1 * nDim], &velocities[itprev * nPoints * nDim + iv1 * nDim],
-                                               &coords[iv2 * nDim], &velocities[itprev * nPoints * nDim + iv2 * nDim],
-                                               &coords[iv3 * nDim], &velocities[itprev * nPoints * nDim + iv3 * nDim],
-                                               Pcoords, interp1, nDim );
-			interpolate_triangle ( &coords[iv1 * nDim], &velocities[itpost * nPoints * nDim + iv1 * nDim],
-                                               &coords[iv2 * nDim], &velocities[itpost * nPoints * nDim + iv2 * nDim],
-                                               &coords[iv3 * nDim], &velocities[itpost * nPoints * nDim + iv3 * nDim],
-                                               Pcoords, interp2, nDim );
-			*/
 
 		         interpolation[0] = (interp1[0] * (t1-t) + interp2[0] * (t-t0))/(t1-t0);
         		 interpolation[1] = (interp1[1] * (t1-t) + interp2[1] * (t-t0))/(t1-t0);
@@ -240,10 +257,12 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
    }
 }
 
-void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double*velocities)
+void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double*velocities, void *kdtree, int *nFacesPerPoint, int *facesPerPoint)
 {
    int ip, iface, itime, itprev, itpost, tsearch = 1;
+   int nFacesNearestPoint, ifp, fsearch, faceNearestPoint;
    int iv1, iv2, iv3, iv4;
+
    double t0, t1;
    double v0[nDim];
    double v1[nDim];
@@ -251,12 +270,47 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
    double interp2[nDim];
    double interp3[nDim];
 
+   double pos[3];
+   int data;
+
+   struct kdres *nearest;
+
    tsearch = binarySearch(times, nTimes, t, &itime);
 
-   ip = find_point_in_mesh_3D ( Pcoords, nDim, nPoints, coords_x, coords_y, coords_z );
+   nearest = kd_nearest (kdtree, Pcoords);
+   data = kd_res_item(nearest, pos);
+
+   if ( pos[0] != Pcoords[0] || pos[1] != Pcoords[1] || pos[2] != Pcoords[2] )
+   {  
+      ip = -1;
+   }
+   else
+   {
+      ip = data;
+   }
+
+   //ip = find_point_in_mesh_3D ( Pcoords, nDim, nPoints, coords_x, coords_y, coords_z );
    if ( ip == -1 ) // P is not a mesh point
    {
-      iface = find_point_simplex_in_mesh_3D ( Pcoords, nDim, nFaces, nVertsPerFace, coords_x, coords_y, coords_z, faces);
+      // TODO: Consider closest point might not belong to the triangle containing the given point
+      iface = -1;
+      data > 0 ? nFacesNearestPoint = nFacesPerPoint[data] - nFacesPerPoint[data-1] : nFacesPerPoint[0];
+      fsearch = 1;
+      for ( ifp = 0; ifp < nFacesNearestPoint && fsearch; ifp++ )
+      {
+         data > 0 ? faceNearestPoint = facesPerPoint[nFacesPerPoint[data-1]+ifp] : facesPerPoint[ifp];
+         iv1 = faces[faceNearestPoint*nVertsPerFace];
+         iv2 = faces[faceNearestPoint*nVertsPerFace+1];
+         iv3 = faces[faceNearestPoint*nVertsPerFace+2];
+         iv4 = faces[faceNearestPoint*nVertsPerFace+3];
+         if ( p_inside_tetrahedron ( iv1, iv2, iv3, iv4, coords_x, coords_y, coords_z, Pcoords, nDim ) )
+         {
+            iface = faceNearestPoint;
+            fsearch = 0;
+         }
+      }
+
+      //iface = find_point_simplex_in_mesh_3D ( Pcoords, nDim, nFaces, nVertsPerFace, coords_x, coords_y, coords_z, faces);
       if (iface > -1) // There is a mesh face or volume containing given point
       {
          // Find closest time values in mesh->times array and interpolate

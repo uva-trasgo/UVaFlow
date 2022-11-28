@@ -4,4 +4,5 @@
 void runge_kutta_4 ( 	double *Pcoords, double t0, double tend, 
 			double *result, int nsteps, int nDim, int nPoints, int nTimes, 
 			double *times, int nVertsPerFace, int nFaces, int *faces, 
-			double *coords_x, double *coords_y, double *coords_z, double *velocities);
+			double *coords_x, double *coords_y, double *coords_z, double *velocities, void *kdtree,
+			int *nFacesPerPoint, int *facesPerPoint);

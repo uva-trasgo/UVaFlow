@@ -28,8 +28,8 @@ void interpolate_3D_tetrahedral ( double *coords_x, double *coords_y, double *co
 /* OUT: interpolation (double *) */
 void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *times, double *interpolation, 
 					 int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, 
-					 int *faces, double *coords_x, double *coords_y, double *velocities);
+					 int *faces, double *coords_x, double *coords_y, double *velocities, void *kdtree, int *nFacesPerPoint, int *facesPertPoint);
 
 void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *times, double *interpolation, 
 					 int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, 
-					 int *faces, double *coords_x, double *coords_y, double *coords_z, double *velocities);
+					 int *faces, double *coords_x, double *coords_y, double *coords_z, double *velocities, void *kdtree, int *nFacesPerPoint, int *facesPertPoint);
