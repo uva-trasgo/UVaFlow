@@ -173,17 +173,7 @@ int main(int argc, char *argv[])
    velocities = (double *) malloc ( sizeof(double) * nTimes * nPoints * nDim );
    read_velocities(argv[6], nPoints, nDim, nTimes, velocities);
    printf("DONE\n");
-/*
-   printf("nPoints %d, nTimes %d, nfaces %d, nvpf %d\n", nPoints, nTimes, nFaces, nVertsPerFace);
-   for ( ip = 0; ip< 10; ip++)
-      printf("Point %d - coords %f %f\n", ip, coords[ip*nDim], coords[ip*nDim+1]);
-   for ( it = 0; it< 10; it++)
-      printf("Time %d --> %f\n", it, times[it]);
-   for ( ip = 0; ip< 10; ip++)
-      printf("Face %d - verts %d %d %d\n", ip, faces[ip*nVertsPerFace], faces[ip*nVertsPerFace+1], faces[ip*nVertsPerFace+2]);
-   for ( ip = 0; ip< 10; ip++)
-      printf("Vel %f %f\n", velocities[ip*nDim], velocities[ip*nDim+1]);
-*/
+
    /* Set number of steps of each RK4 function call */
    nsteps_rk4 = atoi(argv[7]);
  
@@ -204,21 +194,34 @@ int main(int argc, char *argv[])
 
    /* Solve IVPs (using RK4) */
    double *result = malloc( sizeof(double) * nPoints * nDim );
+   #pragma omp parallel for default(none) shared(result, coords_x, coords_y, nDim, nPoints) private(ip)
+   for ( ip = 0; ip < nPoints; ip++ )
+   {
+   	result[ip * nDim]     = coords_x[ip];
+        result[ip * nDim + 1] = coords_y[ip];
+   }
+   if ( nDim == 3 )
+   {
+	#pragma omp parallel for default(none) shared(result, coords_z, nDim, nPoints) private(ip)
+   	for ( ip = 0; ip < nPoints; ip++ )
+   	{
+        	result[ip * nDim + 2] = coords_z[ip];
+   	}
+   }
+
+
    if ( policy == 1 )
    {
       gettimeofday(&start, NULL);
       for ( ip = 0; ip < nPoints; ip++ )
       {
-	    //printf("ip %d\n", ip); fflush(stdout);
-	    result[ip * nDim]     = coords_x[ip];
-	    result[ip * nDim + 1] = coords_y[ip];
-            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
 	    itprev = 0;
+		int countit = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
-		//printf("itprev %d\n", itprev);
+		countit++;
 	       itprev++;
-               runge_kutta_4 ( &result[ ip * nDim ], 
+               runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2], 
                          times[itprev-1],
                          times[itprev], 
                          &result[ ip * nDim ], 
@@ -227,7 +230,7 @@ int main(int argc, char *argv[])
 			 nVertsPerFace, nFaces, faces, 
 			 coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint);
             }
-            runge_kutta_4 ( &result[ ip * nDim ],
+            runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev],
                          t_eval,
                          &result[ ip * nDim ],
@@ -244,7 +247,6 @@ int main(int argc, char *argv[])
       #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kdtree, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-		//printf("ip %d\n", ip);
             result[ip * nDim]     = coords_x[ip]; 
             result[ip * nDim + 1] = coords_y[ip];
             if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
@@ -252,7 +254,7 @@ int main(int argc, char *argv[])
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nDim ],                               
+               runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev-1],
                          times[itprev],      
                          &result[ ip * nDim ],                                      
@@ -261,7 +263,7 @@ int main(int argc, char *argv[])
 			 nVertsPerFace, nFaces, faces, 
 			 coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint);
             }
-            runge_kutta_4 ( &result[ ip * nDim ],
+            runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev],
                          t_eval,
                          &result[ ip * nDim ],
@@ -269,7 +271,6 @@ int main(int argc, char *argv[])
 			 nDim, nPoints, nTimes, times,
 			 nVertsPerFace, nFaces, faces, 
 			 coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint);
-      		if (isnan(result[ ip * nDim ]) || isnan(result[ ip * nDim + 1 ]) || isnan(result[ ip * nDim + 2])) printf("NAN in p %d %f %f %f\n", ip, isnan(result[ ip * nDim ]), isnan(result[ ip * nDim+1 ]), isnan(result[ ip * nDim +2]));
       }
       gettimeofday(&end, NULL);
    }
@@ -286,7 +287,7 @@ int main(int argc, char *argv[])
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nDim ],                               
+               runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev-1],
                          times[itprev],      
                          &result[ ip * nDim ],                                      
@@ -295,7 +296,7 @@ int main(int argc, char *argv[])
 			 nVertsPerFace, nFaces, faces, 
 			 coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint);
             }
-            runge_kutta_4 ( &result[ ip * nDim ],
+            runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev],
                          t_eval,
                          &result[ ip * nDim ],
@@ -319,7 +320,7 @@ int main(int argc, char *argv[])
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
                itprev++;
-               runge_kutta_4 ( &result[ ip * nDim ],                               
+               runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev-1],
                          times[itprev],      
                          &result[ ip * nDim ],                                      
@@ -328,7 +329,7 @@ int main(int argc, char *argv[])
 			 nVertsPerFace, nFaces, faces, 
 			 coords_x, coords_y, coords_z, velocities, kdtree, nFacesPerPoint, facesPerPoint);
             }
-            runge_kutta_4 ( &result[ ip * nDim ],
+            runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2],
                          times[itprev],
                          t_eval,
                          &result[ ip * nDim ],
