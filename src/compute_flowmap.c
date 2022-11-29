@@ -216,10 +216,8 @@ int main(int argc, char *argv[])
       for ( ip = 0; ip < nPoints; ip++ )
       {
 	    itprev = 0;
-		int countit = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
-		countit++;
 	       itprev++;
                runge_kutta_4 ( result[ ip * nDim ], result[ ip * nDim + 1 ], result[ ip * nDim + 2], 
                          times[itprev-1],
@@ -247,9 +245,6 @@ int main(int argc, char *argv[])
       #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kdtree, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-            result[ip * nDim]     = coords_x[ip]; 
-            result[ip * nDim + 1] = coords_y[ip];
-            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -280,9 +275,6 @@ int main(int argc, char *argv[])
       #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kdtree, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-            result[ip * nDim]     = coords_x[ip]; 
-            result[ip * nDim + 1] = coords_y[ip];
-            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -313,9 +305,6 @@ int main(int argc, char *argv[])
       #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kdtree, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided, sched_chunk_size)
       for ( ip = 0; ip < nPoints; ip++ )
       {
-            result[ip * nDim]     = coords_x[ip]; 
-            result[ip * nDim + 1] = coords_y[ip];
-            if (nDim == 3) result[ip * nDim + 2] = coords_z[ip];
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
