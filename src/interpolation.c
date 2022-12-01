@@ -7,6 +7,16 @@
 #include "search.h"
 #include "kdtree.h"
 
+int reset_coordinates ( void *kdtree, double *Pcoords, int nDim )
+{
+   struct kdres *nearest;
+   double pos[nDim];
+   int data;
+   nearest = kd_nearest (kdtree, Pcoords);
+   data    = kd_res_item(nearest, pos);
+   return data;
+}
+
 int reset_coordinates_2D ( int nDim, int nPoints, double *coords_x, double *coords_y, double *Pcoords )
 {
    double distance, min_distance;
@@ -289,7 +299,8 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
       else // The point coords are outside the given mesh data
       {
          // Pcoords will be reset to the closest mesh point coords
-         ip = reset_coordinates_2D ( nDim, nPoints, coords_x, coords_y, Pcoords );
+         ip = reset_coordinates ( kdtree, Pcoords, nDim );
+         //ip = reset_coordinates_2D ( nDim, nPoints, coords_x, coords_y, Pcoords );
       }
    }
    if ( ip > -1 ) // Either the point is a mesh point or has been reseted to one of the mesh points
@@ -434,7 +445,8 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
       else // The point coords are outside the given mesh data
       {
          // Pcoords will be reset to the closest mesh point coords
-         ip = reset_coordinates_3D ( nDim, nPoints, coords_x, coords_y, coords_z, Pcoords );
+         ip = reset_coordinates ( kdtree, Pcoords, nDim );
+         //ip = reset_coordinates_3D ( nDim, nPoints, coords_x, coords_y, coords_z, Pcoords );
       }
    }
    if ( ip > -1 ) // Either the point is a mesh point or has been reseted to one of the mesh points
