@@ -118,15 +118,15 @@ int kd_res_next(struct kdres *set);
 /* returns the data pointer (can be null) of the current result set item
  * and optionally sets its position to the pointers(s) if not null.
  */
-int *kd_res_item(struct kdres *set, double *pos);
-int *kd_res_itemf(struct kdres *set, float *pos);
-int *kd_res_item3(struct kdres *set, double *x, double *y, double *z);
-int *kd_res_item3f(struct kdres *set, float *x, float *y, float *z);
+int kd_res_item(struct kdres *set, double *pos);
+int kd_res_itemf(struct kdres *set, float *pos);
+int kd_res_item3(struct kdres *set, double *x, double *y, double *z);
+int kd_res_item3f(struct kdres *set, float *x, float *y, float *z);
 
-int *kd_res_data (struct kdres *set);
+int kd_res_data (struct kdres *set);
 
 /* equivalent to kd_res_item(set, 0) */
-void *kd_res_item_data(struct kdres *set);
+int kd_res_item_data(struct kdres *set);
 
 
 #ifdef __cplusplus

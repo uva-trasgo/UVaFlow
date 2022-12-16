@@ -657,13 +657,13 @@ int kd_res_next(struct kdres *rset)
 	return rset->riter != 0;
 }
 
-int *kd_res_data ( struct kdres *rset )
+int kd_res_data ( struct kdres *rset )
 {
    if(rset->riter) return rset->riter->item->data;
    return -1;
 }
 
-int *kd_res_item(struct kdres *rset, double *pos)
+int kd_res_item(struct kdres *rset, double *pos)
 {
 	if(rset->riter) {
 		if(pos) {
@@ -674,7 +674,7 @@ int *kd_res_item(struct kdres *rset, double *pos)
 	return 0;
 }
 
-int *kd_res_itemf(struct kdres *rset, float *pos)
+int kd_res_itemf(struct kdres *rset, float *pos)
 {
 	if(rset->riter) {
 		if(pos) {
@@ -688,7 +688,7 @@ int *kd_res_itemf(struct kdres *rset, float *pos)
 	return 0;
 }
 
-int *kd_res_item3(struct kdres *rset, double *x, double *y, double *z)
+int kd_res_item3(struct kdres *rset, double *x, double *y, double *z)
 {
 	if(rset->riter) {
 		if(x) *x = rset->riter->item->pos[0];
@@ -699,7 +699,7 @@ int *kd_res_item3(struct kdres *rset, double *x, double *y, double *z)
 	return 0;
 }
 
-int *kd_res_item3f(struct kdres *rset, float *x, float *y, float *z)
+int kd_res_item3f(struct kdres *rset, float *x, float *y, float *z)
 {
 	if(rset->riter) {
 		if(x) *x = rset->riter->item->pos[0];
@@ -710,7 +710,7 @@ int *kd_res_item3f(struct kdres *rset, float *x, float *y, float *z)
 	return 0;
 }
 
-void *kd_res_item_data(struct kdres *set)
+int kd_res_item_data(struct kdres *set)
 {
 	return kd_res_item(set, 0);
 }

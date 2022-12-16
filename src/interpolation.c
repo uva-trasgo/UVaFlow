@@ -7,16 +7,17 @@
 #include "search.h"
 #include "kdtree.h"
 
-int reset_coordinates ( void *kdtree, double *Pcoords, int nDim )
+int reset_coordinates ( struct kdtree *kd, double *Pcoords, int nDim )
 {
    struct kdres *nearest;
    double pos[nDim];
    int data;
-   nearest = kd_nearest (kdtree, Pcoords);
+   nearest = kd_nearest (kd, Pcoords);
    data    = kd_res_item(nearest, pos);
    return data;
 }
 
+/*
 int reset_coordinates_2D ( int nDim, int nPoints, double *coords_x, double *coords_y, double *Pcoords )
 {
    double distance, min_distance;
@@ -52,6 +53,7 @@ int reset_coordinates_3D ( int nDim, int nPoints, double *coords_x, double *coor
    }
    return ipmin;
 }
+*/
 
 void interpolate_triangle ( 	double *coords_x, double *coords_y, double *velocities,
 				int iv1, int iv2, int iv3, int itime,
@@ -202,7 +204,7 @@ void interpolate_3D_tetrahedral_old ( double *coords_x, double *coords_y, double
 	}
 }
 
-void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double*velocities, void *kdtree, int *nFacesPerPoint, int *facesPerPoint)
+void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *velocities, struct kdtree *kd, int *nFacesPerPoint, int *facesPerPoint)
 {
    int ip, iface, itime, itprev, itpost, tsearch = 1;
    int nFacesNearestPoint, ifp, fsearch, faceNearestPoint;
@@ -221,7 +223,7 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
    struct kdres *nearest;
 
    tsearch = binarySearch(times, nTimes, t, &itime);
-   nearest = kd_nearest (kdtree, Pcoords);
+   nearest = kd_nearest (kd, Pcoords);
    data    = kd_res_item(nearest, pos);
 
    if ( pos[0] != Pcoords[0] || pos[1] != Pcoords[1] )
@@ -299,7 +301,7 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
       else // The point coords are outside the given mesh data
       {
          // Pcoords will be reset to the closest mesh point coords
-         ip = reset_coordinates ( kdtree, Pcoords, nDim );
+         ip = reset_coordinates ( kd, Pcoords, nDim );
          //ip = reset_coordinates_2D ( nDim, nPoints, coords_x, coords_y, Pcoords );
       }
    }
@@ -338,7 +340,7 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
    }
 }
 
-void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double*velocities, void *kdtree, int *nFacesPerPoint, int *facesPerPoint)
+void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *times, double *interpolation, int nDim, int nPoints, int nTimes, int nVertsPerFace, int nFaces, int *faces, double *coords_x, double *coords_y, double *coords_z, double*velocities, struct kdtree *kd, int *nFacesPerPoint, int *facesPerPoint)
 {
    int ip, iface, itime, itprev, itpost, tsearch = 1;
    int nFacesNearestPoint, ifp, fsearch, faceNearestPoint;
@@ -358,7 +360,7 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
 
    tsearch = binarySearch(times, nTimes, t, &itime);
 
-   nearest = kd_nearest (kdtree, Pcoords);
+   nearest = kd_nearest (kd, Pcoords);
    data = kd_res_item(nearest, pos);
 
    if ( pos[0] != Pcoords[0] || pos[1] != Pcoords[1] || pos[2] != Pcoords[2] )
@@ -445,7 +447,7 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
       else // The point coords are outside the given mesh data
       {
          // Pcoords will be reset to the closest mesh point coords
-         ip = reset_coordinates ( kdtree, Pcoords, nDim );
+         ip = reset_coordinates ( kd, Pcoords, nDim );
          //ip = reset_coordinates_3D ( nDim, nPoints, coords_x, coords_y, coords_z, Pcoords );
       }
    }
