@@ -1,0 +1,238 @@
+-------------------------
+|       GCC - O3        |
+-------------------------
+
+./src/compute_flowmap.c:340:42: optimized: loop vectorized using 16 byte vectors
+
+./src/kdtree.c:232:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:281:12: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:391:13: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:490:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:600:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:682:14: optimized: loop vectorized using 16 byte vectors
+
+./src/interpolation.c:124:17: optimized: loop vectorized using 16 byte vectors
+./src/interpolation.c:198:17: optimized: loop vectorized using 16 byte vectors
+
+./src/location.c:123:19: optimized: loop vectorized using 16 byte vectors
+./src/location.c:111:19: optimized: loop vectorized using 16 byte vectors
+
+-------------------------
+|       GCC - Ofast     |
+-------------------------
+
+./src/compute_flowmap.c:204:16: optimized: loop vectorized using 16 byte vectors
+./src/compute_flowmap.c:224:19: optimized: loop vectorized using 16 byte vectors
+./src/compute_flowmap.c:340:42: optimized: loop vectorized using 16 byte vectors
+
+./src/kdtree.c:232:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:281:12: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:391:13: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:490:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:600:14: optimized: loop vectorized using 16 byte vectors
+./src/kdtree.c:682:14: optimized: loop vectorized using 16 byte vectors
+
+./src/interpolation.c:124:17: optimized: loop vectorized using 16 byte vectors
+./src/interpolation.c:198:17: optimized: loop vectorized using 16 byte vectors
+
+./src/location.c:123:19: optimized: loop vectorized using 16 byte vectors
+./src/location.c:111:19: optimized: loop vectorized using 16 byte vectors
+
+-------------------------
+|     ICC - O3/Ofast    |
+-------------------------
+
+LOOP BEGIN at ./src/compute_flowmap.c(201,10)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/compute_flowmap.c(221,13)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/compute_flowmap.c(337,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+---
+
+LOOP BEGIN at ./src/kdtree.c(232,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(281,2) 
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(391,2) 
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(446,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(490,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(600,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(682,4)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/kdtree.c(760,2) 
+<Multiversioned v1>
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+
+---
+
+LOOP BEGIN at ./src/interpolation.c(124,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ./src/interpolation.c(198,2)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+---
+
+LOOP BEGIN at ./src/location.c(111,4) inlined into ./src/location.c(35,12)
+      remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+
+LOOP BEGIN at ./src/location.c(123,4) inlined into ./src/location.c(35,12)
+      remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+
+-------------------------
+|     AOCC - O3         |
+-------------------------
+
+./src/compute_flowmap.c:201:10: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+         #pragma omp parallel for default(none) shared(coords_x, coords_y, ny, ylim, dy) private(ip, iy, yval) firstprivate(ix, xval)
+         ^
+
+./src/compute_flowmap.c:221:13: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+            #pragma omp parallel for default(none) shared(coords_x, coords_y, coords_z, ny, ylim, dy, nz, zlim, dz) private(ip, iz) firstprivate(ix, iy, xval, yval)
+            ^
+
+./src/compute_flowmap.c:337:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        #pragma omp parallel for default(none) shared(result, coords_z, nDim, nPoints) private(ip)
+        ^
+
+---
+
+./src/kdtree.c:232:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:490:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:600:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:682:4: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+                        for(i=0; i<rset->tree->dim; i++) {
+                        ^
+
+./src/kdtree.c:760:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        for (i=0; i < rect->dim; i++) {
+        ^
+
+---
+
+./src/interpolation.c:124:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        for ( d = 0; d < nDim; d++ )
+        ^
+
+./src/interpolation.c:198:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        for ( d = 0; d < nDim; d++ )
+        ^
+
+---
+
+./src/location.c:111:4: remark: vectorized loop (vectorization width: 4, interleaved count: 1) [-Rpass=loop-vectorize]
+   for ( i = 0; i < nDim; i++ )
+   ^
+
+
+-------------------------
+|     AOCC - Ofast      |
+-------------------------
+
+./src/compute_flowmap.c:221:13: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+            #pragma omp parallel for default(none) shared(coords_x, coords_y, coords_z, ny, ylim, dy, nz, zlim, dz) private(ip, iz) firstprivate(ix, iy, xval, yval)
+            ^
+
+./src/compute_flowmap.c:288:10: remark: vectorized loop (vectorization width: 4, interleaved count: 1) [-Rpass=loop-vectorize]
+         for ( ip = 0; ip < nPoints; ip++ )
+         ^
+
+./src/compute_flowmap.c:299:10: remark: vectorized loop (vectorization width: 4, interleaved count: 1) [-Rpass=loop-vectorize]
+         for ( ip = 0; ip < nPoints; ip++ )
+         ^
+
+./src/compute_flowmap.c:337:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        #pragma omp parallel for default(none) shared(result, coords_z, nDim, nPoints) private(ip)
+        ^
+
+---
+
+./src/kdtree.c:760:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        for (i=0; i < rect->dim; i++) {
+        ^
+
+./src/kdtree.c:232:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:281:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        for(i=0; i<dim; i++) {
+        ^
+
+./src/kdtree.c:391:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        for(i=0; i < rect->dim; i++) {
+        ^
+
+./src/kdtree.c:490:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:600:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        while(dim-- > 0) {
+        ^
+
+./src/kdtree.c:682:4: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+                        for(i=0; i<rset->tree->dim; i++) {
+                        ^
+---
+
+./src/interpolation.c:124:2: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+        for ( d = 0; d < nDim; d++ )
+        ^
+
+./src/interpolation.c:198:2: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+        for ( d = 0; d < nDim; d++ )
+        ^
+
+---
+
+./src/location.c:111:4: remark: vectorized loop (vectorization width: 4, interleaved count: 1) [-Rpass=loop-vectorize]
+   for ( i = 0; i < nDim; i++ )
+   ^
+   
+./src/location.c:123:4: remark: vectorized loop (vectorization width: 4, interleaved count: 2) [-Rpass=loop-vectorize]
+   for ( i = 0; i < nDim; i++ )
+   ^
+
