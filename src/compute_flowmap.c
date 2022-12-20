@@ -9,14 +9,49 @@
 #include "omp.h"
 #include "kdtree.h"
 #include <assert.h>
+#include <sys/resource.h>
+
+#define pi 3.142857
+
+void dgyre_velocity ( double x, double y, double t, double *vel )
+{
+   double A = 0.1;
+   double omega = 2 * pi/10;
+   double epsilon = 0.25;
+   double a_t = epsilon*sin(omega*t);
+   double b_t = 1 - 2*epsilon*sin(omega*t);
+   double f = a_t*x*x+b_t*x;
+   double dfdx = 2*a_t*x+b_t;
+   vel[0] = -A*pi*sin(pi*f)*cos(pi*y);
+   vel[1] = pi * A*cos(pi*f)*sin(pi*y)*dfdx;
+}
+
+void abc_velocity ( double x, double y, double z, double t, double *vel )
+{
+   double A = sqrt(3);
+   double B = sqrt(2);
+   double C = 1;
+   double omega = 2*pi/10;
+   double epsilon = 0.1;
+   double A_t = A + epsilon * cos(omega*t);
+   vel[0] = A_t * sin(z) + C * cos(y);
+   vel[1] = B * sin(x) + A_t * cos(z);
+   vel[2] = C * sin(y) + B * cos(x);
+}
 
 int main(int argc, char *argv[])
 {
+   struct timeval globalstart;
+   struct timeval globalend;  
+   struct rusage r_usage;
+   int ret;
+
+   gettimeofday(&globalstart, NULL);
    // Check usage
-   if (argc != 11)
+   if (argc != 16)
    {
-	printf("USAGE: ./executable <nDim> <t_eval> <coords_file> <faces_file> <times_file> <vel_file> <nsteps_rk4> <sched_policy> <chunk_size> <print>\n");
-	printf("\texecutable:   compute_flowmap (sequential)\n");
+	printf("USAGE: ./executable <nDim> <t_eval> <coords_file> <faces_file> <times_file> <vel_file> <nsteps_rk4> <sched_policy> <chunk_size> <print> <nx> <ny> <nz> <nt> <tlim>\n");
+	printf("\texecutable:   compute_flowmap\n");
 	printf("\tnDim:         dimensions of the space (2D/3D)\n");
 	printf("\tt_eval:       t to evaluate.\n");
 	printf("\tcoords_file:  file where mesh coordinates are stored.\n");
@@ -27,7 +62,12 @@ int main(int argc, char *argv[])
 	printf("\tsched_policy: SEQUENTIAL (1) / OMP_STATIC (2) / OMP_DYNAMIC (3) / OMP_GUIDED (4)\n");
         printf("\tchunk_size:   size of the chunk for the chosen scheduling policy\n");
 	printf("\tprint to file? (0-NO, 1-YES)\n");
-	return 1;
+        printf("\tnx:           number of points in X axis\n");
+        printf("\tny:           number of points in Y axis\n");
+        printf("\tnz:           number of points in Z axis\n");
+        printf("\tnt:           number of known time instants\n");
+        printf("\ttlim:         max known time instant\n");
+        return 1;
    }
 
    int d, ip, it, itprev;
@@ -66,6 +106,8 @@ int main(int argc, char *argv[])
    FILE *file;
 
    struct kdtree *kd;
+   int xlim, ylim, zlim;
+   double tlim = atof(argv[15]);
 
    /* Mesh dimension obtained (from input arguments) */
    /* Number of vertices per face according to dim   */
@@ -75,6 +117,7 @@ int main(int argc, char *argv[])
    {
       kd = kd_create(2);
       nVertsPerFace = 3; // 2D: faces are triangles
+      xlim = 2; ylim = 1; // 2D: double gire flow
    }
    else
    {
@@ -82,6 +125,7 @@ int main(int argc, char *argv[])
       {
          kd = kd_create(3);
          nVertsPerFace = 4; // 3D: faces (volumes) are tetrahedrons
+         xlim = 1; ylim = 1; zlim = 1; // 3D: ABC flow
       }
       else
       {
@@ -89,6 +133,12 @@ int main(int argc, char *argv[])
          return 1;
       }
    }
+
+   /* Number of points in each axis */
+   int nx = atoi(argv[11]);
+   int ny = atoi(argv[12]);
+   int nz = atoi(argv[13]);
+   int nt = atoi(argv[14]);
 
    /* Time instant to evaluate (from input arguments) */
    t_eval = atof(argv[2]);
@@ -119,15 +169,20 @@ int main(int argc, char *argv[])
    fclose(file);
 
    // 3. Get nTimes
-   file = fopen( argv[5], "r" );
-   check_EOF = fscanf(file, "%s", buffer);
-   if ( check_EOF == EOF )
-   {
-      fprintf( stderr, "Error: Unexpected EOF in read_times\n" );
-      exit(-1);
-   }
-   nTimes = atoi(buffer);
-   fclose(file);
+   //file = fopen( argv[5], "r" );
+   //check_EOF = fscanf(file, "%s", buffer);
+   //if ( check_EOF == EOF )
+   //{
+   //   fprintf( stderr, "Error: Unexpected EOF in read_times\n" );
+   //   exit(-1);
+   //}
+   nTimes = nt; //atoi(buffer);
+   //fclose(file);
+
+   double dx = (double) xlim/ (double) nx; double xval;
+   double dy = (double) ylim/ (double) ny; double yval;
+   double dz;// = (double) zlim/ (double) nz;
+   double dt;
 
    // 4. Read mesh coords values from the given file
    printf("Reading mesh points coordinates...                     ");
@@ -135,6 +190,47 @@ int main(int argc, char *argv[])
    coords_y = (double *) malloc ( sizeof(double) * nPoints );
    if ( nDim == 3) coords_z = (double *) malloc ( sizeof(double) * nPoints );
    read_coordinates(argv[3], nDim, nPoints, coords_x, coords_y, coords_z); 
+/*
+   ip = 0;
+   int ix, iy, iz;
+   if ( nDim == 2 )
+   {
+      for (ix = 0; ix < nx; ix++ )
+      {
+         xval = ( ix == (nx - 1) ) ? xlim : dx * ix;
+         #pragma omp parallel for default(none) shared(coords_x, coords_y, ny, ylim, dy) private(ip, iy, yval) firstprivate(ix, xval)
+         for (iy = 0; iy < ny; iy++ )
+         {
+            ip = ix * ny + iy;
+            yval = ( iy == (ny - 1) ) ? ylim : dy * iy;
+            coords_x[ip] = xval;
+            coords_y[ip] = yval;
+            //ip++;
+         }
+      }
+   }
+   else // nDim==3
+   {
+      dz = (double) zlim/ (double) nz;
+      for (ix = 0; ix < nx; ix++ )
+      {
+         xval = ( ix == (nx - 1) ) ? xlim : dx * ix;
+         for (iy = 0; iy < ny; iy++ )
+         {
+            yval = ( iy == (ny - 1) ) ? ylim : dy * iy;
+            #pragma omp parallel for default(none) shared(coords_x, coords_y, coords_z, ny, ylim, dy, nz, zlim, dz) private(ip, iz) firstprivate(ix, iy, xval, yval)
+            for (iz = 0; iz < nz; iz++ )
+            {
+               ip = ix * ny * nz + iy * nz + iz;
+               coords_x[ip] = xval;
+               coords_y[ip] = yval;
+               coords_z[ip] = ( iz == (nz - 1) ) ? zlim : dz * iz;
+               //ip++;
+            }
+         }
+      }
+   }
+*/
    printf("DONE\n");
 
    // 4.1 Populate kdtree with coords
@@ -165,16 +261,50 @@ int main(int argc, char *argv[])
 
    // 6. Read time values from the given file
    printf("Reading known time values...                           ");
+   printf("nTimes, tlim %d %f\n", nTimes, tlim);
    times = (double *) malloc ( sizeof(double) * nTimes );
+/*
+   int itim;
+   #pragma omp parallel for default(none) private(itim) shared(times, nTimes, dt)
+   for ( itim = 0; itim < nTimes -1; itim++ )
+	times[itim] = dt * itim;
+   times[nTimes-1] = tlim;
+*/
    read_times(argv[5], nTimes, times);
+
+
    printf("DONE\n");
 
    // 7. Read velocities from the given file
    printf("Reading known velocity values...                           ");fflush(stdout);
    velocities = (double *) malloc ( sizeof(double) * nTimes * nPoints * nDim );
    read_velocities(argv[6], nPoints, nDim, nTimes, velocities);
+/*
+   int iv = 0, itim;
+   if ( nDim == 2 )
+   {
+      for ( itim = 0; itim < nTimes; itim++ )
+      {
+         for ( ip = 0; ip < nPoints; ip++ )
+         {
+            dgyre_velocity(coords_x[ip], coords_y[ip], times[itim], &velocities[iv]);
+            iv = iv + 2;
+         }
+      }
+   }
+   else // nDim==3
+   {
+     for ( itim = 0; itim < nTimes; itim++ )
+      {
+         for ( ip = 0; ip < nPoints; ip++ )
+         {
+            abc_velocity(coords_x[ip], coords_y[ip], coords_z[ip], times[itim], &velocities[iv]);
+            iv = iv + 3;
+         }
+      }
+   }
+*/
    printf("DONE\n");
-
 
    /* Set number of steps of each RK4 function call */
    nsteps_rk4 = atoi(argv[7]);
@@ -196,7 +326,7 @@ int main(int argc, char *argv[])
 
    /* Solve IVPs (using RK4) */
    double *result = malloc( sizeof(double) * nPoints * nDim );
-   //#pragma omp parallel for default(none) shared(result, coords_x, coords_y, nDim, nPoints) private(ip)
+   #pragma omp parallel for default(none) shared(result, coords_x, coords_y, nDim, nPoints) private(ip)
    for ( ip = 0; ip < nPoints; ip++ )
    {
    	result[ip * nDim]     = coords_x[ip];
@@ -204,7 +334,7 @@ int main(int argc, char *argv[])
    }
    if ( nDim == 3 )
    {
-	//#pragma omp parallel for default(none) shared(result, coords_z, nDim, nPoints) private(ip)
+	#pragma omp parallel for default(none) shared(result, coords_z, nDim, nPoints) private(ip)
    	for ( ip = 0; ip < nPoints; ip++ )
    	{
         	result[ip * nDim + 2] = coords_z[ip];
@@ -244,9 +374,10 @@ int main(int argc, char *argv[])
    else if ( policy == 2 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(static)
+      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev, r_usage) schedule(static)
       for ( ip = 0; ip < nPoints; ip++ )
       {
+	    getrusage(RUSAGE_SELF,&r_usage);
             itprev = 0;
             while ( ( itprev+1 < nTimes ) && ( times[itprev+1] < t_eval ) )
             {
@@ -368,5 +499,9 @@ int main(int argc, char *argv[])
    free (result);
    kd_free(kd);
 
+   gettimeofday(&globalend, NULL);
+   time = (globalend.tv_sec - globalstart.tv_sec) + (globalend.tv_usec - globalstart.tv_usec)/1000000.0;
+   printf("Exec TOTAL time (nPoints %d) = %f\n", nPoints, time);
+   printf("Memory usage = %ld\n",r_usage.ru_maxrss);
    return 0;
 }
