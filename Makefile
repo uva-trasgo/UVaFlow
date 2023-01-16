@@ -6,7 +6,7 @@ ICC=icc
 # Flags
 FLAGS=-lm
 FLAG_OMP=-fopenmp
-FLAG_ZEN3=-march=znver3
+FLAG_ZEN3=#-march=znver3 #Uncomment if Ryzen3 is going to be used
 
 # Vectorization reports
 ICC_REP=-D NOFUNCCALL -qopt-report=1 -qopt-report-phase=vec
