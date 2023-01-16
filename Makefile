@@ -6,7 +6,7 @@ ICC=icc
 # Flags
 FLAGS=-lm
 FLAG_OMP=-fopenmp
-FLAG_ZEN3=-march=znver3
+FLAG_ZEN3=#-march=znver3 #Uncomment if Ryzen3 is going to be used
 
 # Vectorization reports
 ICC_REP=-D NOFUNCCALL -qopt-report=1 -qopt-report-phase=vec
@@ -30,7 +30,7 @@ GCC_OBJS=gcc_O3_compute_flowmap gcc_Of_compute_flowmap
 ICC_OBJS=icc_O3_compute_flowmap icc_Of_compute_flowmap
 AOCC_OBJS=aocc_O3_compute_flowmap aocc_Of_compute_flowmap
 
-OBJS=${GCC_OBJS} ${AOCC_OBJS} ${ICC_OBJS}
+OBJS=${GCC_OBJS} ${AOCC_OBJS} #${ICC_OBJS} #Uncomment ICC_OBJS to also compile the icc version
 
 # Make lists
 all:     ${OBJS}
