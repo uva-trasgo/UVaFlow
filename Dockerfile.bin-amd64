@@ -21,7 +21,6 @@ RUN pip3 install pyvista meshio
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
 COPY source ${INSTALL_DIR}/source
-COPY preprocess ${INSTALL_DIR}/preprocess
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 
@@ -44,7 +43,6 @@ RUN apt-get update && apt-get install -y libgomp1
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
 COPY source ${INSTALL_DIR}/source
-COPY preprocess ${INSTALL_DIR}/preprocess
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 COPY --from=uvaflow-builder ${INSTALL_DIR}/bin ${INSTALL_DIR}/bin
