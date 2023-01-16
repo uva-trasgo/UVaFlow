@@ -97,11 +97,11 @@ Samples:
 
 - 2D sample: Computation of the flowmap using the GCC compiler provided with the -O3 optimization flag, for a ${\color{blue}2D}$ mesh at ${\color{red}t=8}$ having the data files stored in the ```source/dgyre_input/``` folder, using the ${\color{lightgreen}OpenMP dynamic}$ based parallel version (with ${\color{darkgreen}a\ chunk\ size\ of\ 1}$), ${\color{orange}1\ step}$ for the RK4 calls, and ${\color{purple}not\ printing}$ the output in any file.
 
-  > bin/gcc_O3_compute_flowmap ${\color{blue}2}$ ${\color{red}8}$ source/dgyre_input/coords.txt source/dgyre_input/faces.txt source/dgyre_input/times.txt source/dgyre_input/velocity.txt ${\color{orange}1}$ ${\color{lightgreen}3}$ ${\color{darkgreen}1}$ ${\color{purple}0}$
+  > __bin/gcc_O3_compute_flowmap ${\color{blue}2}$ ${\color{red}8}$ source/dgyre_input/coords.txt source/dgyre_input/faces.txt source/dgyre_input/times.txt source/dgyre_input/velocity.txt ${\color{orange}1}$ ${\color{lightgreen}3}$ ${\color{darkgreen}1}$ ${\color{purple}0}$__
   
 - 3D sample: Computation of the flowmap using the AOCC compiler provided with the -Ofast optimization flag, for a ${\color{blue}3D}$ mesh at ${\color{red}t=0.5}$ having the data files stored in the ```source/abc_input/``` folder, using the ${\color{lightgreen}OpenMP static}$ based parallel version (with ${\color{darkgreen}a\ chunk\ size\ of\ 100}$), ${\color{orange}1\ step}$ for the RK4 calls, and ${\color{purple}not\ printing}$ the output in any file.
 
-  > bin/aocc_Of_compute_flowmap ${\color{blue}3}$ ${\color{red}0.5}$ source/abc_input/coords.txt source/abc_input/faces.txt source/abc_input/times.txt source/abc_input/velocity.txt ${\color{orange}1}$ ${\color{lightgreen}2}$ ${\color{darkgreen}100}$ ${\color{purple}0}$
+  > __bin/aocc_Of_compute_flowmap ${\color{blue}3}$ ${\color{red}0.5}$ source/abc_input/coords.txt source/abc_input/faces.txt source/abc_input/times.txt source/abc_input/velocity.txt ${\color{orange}1}$ ${\color{lightgreen}2}$ ${\color{darkgreen}100}$ ${\color{purple}0}$__
 
 ## How to cite
 
