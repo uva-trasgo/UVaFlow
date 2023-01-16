@@ -45,14 +45,8 @@ aocc:    ${AOCC_OBJS}
 gcc_O3_compute_flowmap:
 	${CC} ${FLAG_OMP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_O3_compute_flowmap ${FLAGS} -O3
 
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${CC} ${FLAG_OMP} ${GCC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_O3_compute_flowmap ${FLAGS} -O3
-
 gcc_Of_compute_flowmap:
 	${CC} ${FLAG_OMP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_Of_compute_flowmap ${FLAGS} -Ofast
-
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${CC} ${FLAG_OMP} ${GCC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_Of_compute_flowmap ${FLAGS} -Ofast
 
 # -------------------------- #
 # ---------- ICC ----------- #
@@ -61,14 +55,8 @@ gcc_Of_compute_flowmap:
 icc_O3_compute_flowmap:
 	${ICC} ${FLAG_OMP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_O3_compute_flowmap ${FLAGS} -O3
 
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${ICC} ${FLAG_OMP} ${ICC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_O3_compute_flowmap ${FLAGS} -O3
-
 icc_Of_compute_flowmap:
 	${ICC} ${FLAG_OMP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_Of_compute_flowmap ${FLAGS} -Ofast
-
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${ICC} ${FLAG_OMP} ${ICC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_Of_compute_flowmap ${FLAGS} -Ofast
 
 # -------------------------- #
 # ---------- AOCC----------- #
@@ -77,14 +65,30 @@ icc_Of_compute_flowmap:
 aocc_O3_compute_flowmap:
 	${CLANG} ${FLAG_OMP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_O3_compute_flowmap_z3 ${FLAGS} -O3
 
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${CLANG} ${FLAG_OMP} ${AOCC_REP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_O3_compute_flowmap_z3 ${FLAGS} -O3
-
 aocc_Of_compute_flowmap:
 	${CLANG} ${FLAG_OMP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_Of_compute_flowmap_z3 ${FLAGS} -Ofast
 
-# Uncomment the following line (and comment the previous) to see vectorization information
-#${CLANG} ${FLAG_OMP} ${AOCC_REP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_Of_compute_flowmap_z3 ${FLAGS} -Ofast
+# -------------------------- #
+# ----- Vectorization ------ #
+# -------------------------- #
+
+gcc_O3_compute_flowmap_vect:
+	${CC} ${FLAG_OMP} ${GCC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_O3_compute_flowmap ${FLAGS} -O3
+
+gcc_Of_compute_flowmap_vect:
+	${CC} ${FLAG_OMP} ${GCC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/gcc_Of_compute_flowmap ${FLAGS} -Ofast
+
+icc_O3_compute_flowmap_vect:
+	${ICC} ${FLAG_OMP} ${ICC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_O3_compute_flowmap ${FLAGS} -O3
+
+icc_Of_compute_flowmap_vect:
+	${ICC} ${FLAG_OMP} ${ICC_REP} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/icc_Of_compute_flowmap ${FLAGS} -Ofast
+
+aocc_O3_compute_flowmap_vect:
+	${CLANG} ${FLAG_OMP} ${AOCC_REP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_O3_compute_flowmap_z3 ${FLAGS} -O3
+
+aocc_Of_compute_flowmap_vect:
+	${CLANG} ${FLAG_OMP} ${AOCC_REP} ${FLAG_ZEN3} ${DIR_src}/compute_flowmap.c ${SRC} -I ${INC} -o ${DIR_bin}/aocc_Of_compute_flowmap_z3 ${FLAGS} -Ofast
 
 # -------------------------- #
 # ---------- Clean---------- #
