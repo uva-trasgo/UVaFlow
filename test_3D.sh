@@ -1,6 +1,6 @@
 # Create and enter the test folder
-mkdir Test_3D_jan
-cd Test_3D_jan
+mkdir Test_3D
+cd Test_3D
 
 # Mesh dimension
 nDim=3
