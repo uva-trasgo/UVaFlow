@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/uva-trasgo/UVaFlow/blob/master/UvaFlow_Logo.png"
+  <img src="https://github.com/uva-trasgo/UVaFlow/blob/master/UVaFlow_Logo.png"
  </p>
 
 A parallel software (based on OpenMP) to compute flowmaps in the extraction of Lagrangian Coherent Structures (LCS) in 2D/3D scenarios.
