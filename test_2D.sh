@@ -34,7 +34,7 @@ done
 
 # B) Parallel tets
 # Number of OpenMP threads to use
-for th in 12 24 #36 48 72 96
+for th in 12 24 36 48 72 96
 do
     export OMP_NUM_THREADS=$th
     # Sequential (1) or OpenMP parallel versions (static - 2, dynamic - 3, guided - 4)
