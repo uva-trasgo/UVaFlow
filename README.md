@@ -1,5 +1,8 @@
-# UVaFlow
-Parallel software (based on OpenMP) to compute flowmaps in the extraction of Lagrangian Coherent Structures (LCS) in 2D/3D scenarios.
+<p align="center">
+  <img src="https://github.com/uva-trasgo/UVaFlow/blob/master/UvaFlow_Logo.png"
+ </p>
+
+A parallel software (based on OpenMP) to compute flowmaps in the extraction of Lagrangian Coherent Structures (LCS) in 2D/3D scenarios.
 
 Currently supported meshes must be composed of simplex faces, this is, triangles (in 2D) or tetrahedrons (in 3D).
 
