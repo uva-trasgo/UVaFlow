@@ -24,8 +24,6 @@ COPY source ${INSTALL_DIR}/source
 COPY preprocess ${INSTALL_DIR}/preprocess
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
-COPY test_2D.sh ${INSTALL_DIR}/test_2D.sh
-COPY test_3D.sh ${INSTALL_DIR}/test_3D.sh
 
 # Container init directory
 WORKDIR ${INSTALL_DIR}
@@ -49,8 +47,6 @@ COPY source ${INSTALL_DIR}/source
 COPY preprocess ${INSTALL_DIR}/preprocess
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
-COPY test_2D.sh ${INSTALL_DIR}/test_2D.sh
-COPY test_3D.sh ${INSTALL_DIR}/test_3D.sh
 COPY --from=uvaflow-builder ${INSTALL_DIR}/bin ${INSTALL_DIR}/bin
 
 WORKDIR ${INSTALL_DIR}
