@@ -48,19 +48,16 @@ int main(int argc, char *argv[])
 
    gettimeofday(&globalstart, NULL);
    // Check usage
-   if (argc != 16)
+   if (argc != 13)
    {
-	printf("USAGE: ./executable <nDim> <t_eval> <coords_file> <faces_file> <times_file> <vel_file> <nsteps_rk4> <sched_policy> <chunk_size> <print> <nx> <ny> <nz> <nt> <tlim>\n");
+	printf("USAGE: ./executable <nDim> <t_eval> <faces_file> <times_file> <nsteps_rk4> <sched_policy> <print> <nx> <ny> <nz> <nt> <tlim>\n");
 	printf("\texecutable:   compute_flowmap\n");
 	printf("\tnDim:         dimensions of the space (2D/3D)\n");
 	printf("\tt_eval:       t to evaluate.\n");
-	printf("\tcoords_file:  file where mesh coordinates are stored.\n");
         printf("\tfaces_file:   file where mesh faces are stored.\n");
         printf("\ttimes_file:   file where original time data are stored.\n");
-        printf("\tvel_file:     file where original velocity data is stored.\n");
         printf("\tnsteps_rk4:   number of iterations to perform in the RK4 call.\n");
 	printf("\tsched_policy: SEQUENTIAL (1) / OMP_STATIC (2) / OMP_DYNAMIC (3) / OMP_GUIDED (4)\n");
-        printf("\tchunk_size:   size of the chunk for the chosen scheduling policy\n");
 	printf("\tprint to file? (0-NO, 1-YES)\n");
         printf("\tnx:           number of points in X axis\n");
         printf("\tny:           number of points in Y axis\n");
@@ -80,7 +77,6 @@ int main(int argc, char *argv[])
    int    nFaces;
    int    nVertsPerFace;
    int    policy;
-   int    sched_chunk_size;
    int    nsteps_rk4;
 
    double t_eval;
@@ -107,7 +103,7 @@ int main(int argc, char *argv[])
 
    struct kdtree *kd;
    int xlim, ylim, zlim;
-   double tlim = atof(argv[15]);
+   double tlim = atof(argv[12]);
 
    /* Mesh dimension obtained (from input arguments) */
    /* Number of vertices per face according to dim   */
@@ -135,10 +131,10 @@ int main(int argc, char *argv[])
    }
 
    /* Number of points in each axis */
-   int nx = atoi(argv[11]);
-   int ny = atoi(argv[12]);
-   int nz = atoi(argv[13]);
-   int nt = atoi(argv[14]);
+   int nx = atoi(argv[8]);
+   int ny = atoi(argv[9]);
+   int nz = atoi(argv[10]);
+   int nt = atoi(argv[11]);
 
    /* Time instant to evaluate (from input arguments) */
    t_eval = atof(argv[2]);
@@ -151,7 +147,7 @@ int main(int argc, char *argv[])
    if ( nDim == 3 ) nPoints = nPoints * nz;
 
    // 2. Get nFaces and faces ids
-   file = fopen( argv[4], "r" );
+   file = fopen( argv[3], "r" );
    check_EOF = fscanf(file, "%s", buffer);
    if ( check_EOF == EOF )
    {
@@ -227,7 +223,7 @@ int main(int argc, char *argv[])
    // 5. Read mesh faces values from the given file
    printf("Reading mesh faces vertices...                         "); 
    faces = (int *) malloc ( sizeof(int) * nFaces * nVertsPerFace );
-   read_faces(argv[4], nDim, nVertsPerFace, nFaces, faces); 
+   read_faces(argv[3], nDim, nVertsPerFace, nFaces, faces); 
    printf("DONE\n");
 
    // 5.1 Create auxiliar faces per point vectors information
@@ -241,7 +237,7 @@ int main(int argc, char *argv[])
    // 6. Read time values from the given file
    printf("Reading known time values...                           ");
    times = (double *) malloc ( sizeof(double) * nTimes );
-   read_times(argv[5], nTimes, times);
+   read_times(argv[4], nTimes, times);
    printf("DONE\n");
 
    // 7. Read velocities from the given file
@@ -273,16 +269,15 @@ int main(int argc, char *argv[])
    printf("DONE\n");
 
    /* Set number of steps of each RK4 function call */
-   nsteps_rk4 = atoi(argv[7]);
+   nsteps_rk4 = atoi(argv[5]);
  
-   /* Set scheduling policy and its chunk size */
-   policy = atoi(argv[8]);
+   /* Set scheduling policy */
+   policy = atoi(argv[6]);
    if ( policy < 1 || policy > 4 )
    {
       printf("Wrong sched policy. Should be a 1-4 value.\nSEQUENTIAL (1) / OMP_STATIC (2) / OMP_DYNAMIC (3) / OMP_GUIDED (4)\n");
       return 1;
    }
-   sched_chunk_size = atoi(argv[9]);
 
    #pragma omp parallel
    {
@@ -343,7 +338,7 @@ int main(int argc, char *argv[])
    else if ( policy == 2 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev, r_usage) schedule(static)
+      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, nVertsPerFace, nFaces, faces) private(ip, it, itprev, r_usage) schedule(static)
       for ( ip = 0; ip < nPoints; ip++ )
       {
             itprev = 0;
@@ -373,7 +368,7 @@ int main(int argc, char *argv[])
    else if ( policy == 3 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic)
+      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(dynamic)
       for ( ip = 0; ip < nPoints; ip++ )
       {
             itprev = 0;
@@ -403,7 +398,7 @@ int main(int argc, char *argv[])
    else if ( policy == 4 )
    {
       gettimeofday(&start, NULL);
-      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, sched_chunk_size, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided)
+      #pragma omp parallel for default(none) shared(nFacesPerPoint, facesPerPoint, kd, nPoints, nDim, coords_x, coords_y, coords_z, velocities, times, nTimes, t_eval, nsteps_rk4, result, nVertsPerFace, nFaces, faces) private(ip, it, itprev) schedule(guided)
       for ( ip = 0; ip < nPoints; ip++ )
       {
             itprev = 0;
@@ -443,7 +438,7 @@ int main(int argc, char *argv[])
    printf("\nFlowmap computation elapsed time = %f seconds\n", nPoints, time);
 
    /* Print res to file */
-   if ( atoi(argv[10]) )
+   if ( atoi(argv[7]) )
    {
       fp_w = fopen("output_for_ftle.csv", "w");
       for ( ip = 0; ip < nPoints; ip++)
