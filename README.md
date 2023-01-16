@@ -149,7 +149,7 @@ The only difference between them is the fact that Option A uses ```src/compute_f
     make gcc
     ```
    
-4. Test. Either use ```test_2D.sh``` and ```test_3D.sh``` or modified versions of them.
+4. Test. Either use [```test_2D.sh```](https://github.com/uva-trasgo/UVaFlow/blob/master/test_2D.sh) and [```test_3D.sh```](https://github.com/uva-trasgo/UVaFlow/blob/master/test_3D.sh) or modified versions of them.
 
 #### Option B (faster)
 
@@ -172,4 +172,22 @@ The only difference between them is the fact that Option A uses ```src/compute_f
     make gcc
     ```
     
- 4. Test. Either use ```test_2D.sh``` and ```test_3D.sh``` or modified versions of them.
+ 4. Test. Either use [```test_2D.sh```](https://github.com/uva-trasgo/UVaFlow/blob/master/2023_Reproduction_JoCS_Paper_Results/test_2D.sh) and [```test_3D.sh```](https://github.com/uva-trasgo/UVaFlow/blob/master/2023_Reproduction_JoCS_Paper_Results/test_3D.sh) or modified versions of them.
+    
+    __NOTE:__ In this C version that auto-generates part of the data, fewer files are provided, but additional information is required in order to be able to generate the coordinates and velocity values.
+  
+      Usage: 
+  
+      ```bin/<executable> <nDim> <t_eval> <faces_file> <times_file> <nsteps_rk4> <sched_policy> <print> <nx> <ny> <nz> <nt> <tlim>```
+  
+      Where:
+      - ```executable```: gcc_O3_compute_flowmap, gcc_Of_compute_flowmap, aocc_O3_compute_flowmap, aocc_Of_compute_flowmap... the executable stored in the ```bin``` folder that corresponds to the compiler (gcc, clang, icc) and optimization flag (-O3, -Ofast) desired (see the "Compilation from scratch" section for more details).
+      - ```nDim```: either ```2``` (for 2D Flows) or ```3``` (for 3D flows)
+      - ```t_eval```: time instant when the user wants to compute the flowmap
+      - ```faces_file/times_file```:  file where mesh faces/times are stored (see the data files section for more information).
+      - ```nsteps_rk4```: number of iterations to perform in the RK4 call.
+      - ```sched_policy```: either perform a sequential execution (```1```) or a parallel one based on OpenMP static (```2```), dynamic (```3```) or guided (```4```) scheduling policy
+      - ```print```: indicate whether the final result must be stored in an output file or not (```0```-NO, ```1```-YES)
+      - ```nx/ny/nz```: number of steps in the X/Y/Z axis (required to generate the coordinates)
+      - ```nt```: number of known time instants
+      - ```tlim```: last time instant known
