@@ -47,7 +47,7 @@ The mesh data must be provided separated in files:
 
 ## Data generation
 
-The ```UVaFlow_mesh-generation.py``` Python script automatically generates the four files described in the previous section, either for the 2D Double Gyre and 3D ABC flows. Please, note that the mesh files generation of big meshes might take some time to complete.
+The [```UVaFlow_mesh-generation.py```](https://github.com/uva-trasgo/UVaFlow/blob/master/UVaFlow_mesh-generation.py) Python script automatically generates the four files described in the previous section, either for the 2D Double Gyre and 3D ABC flows. Please, note that the mesh files generation of big meshes might take some time to complete.
 
 Remarks:
 
