@@ -93,7 +93,6 @@ void read_faces ( char *filename, int nDim, int nVertsPerFace, int nFaces, int *
 void read_times ( char *filename, int nTimes, double *times) 
 {
    int it, check_EOF;
-   //char buffer[255];
    double buffer;
    int buffer_size;
    FILE *file;
@@ -102,7 +101,6 @@ void read_times ( char *filename, int nTimes, double *times)
    file = fopen( filename, "r" );
    
    // First element must be nTimes
-   //check_EOF = fscanf(file, "%s", buffer);
    check_EOF = fscanf(file, "%d\n", &buffer_size);
    if ( check_EOF == EOF )
    {
@@ -113,7 +111,6 @@ void read_times ( char *filename, int nTimes, double *times)
    // Rest of read elements will be time data
    for ( it = 0; it < nTimes; it++ )
    {
-      //check_EOF = fscanf(file, "%s", buffer);
       check_EOF = fscanf(file, "%lf\n", &buffer);
       if ( check_EOF == EOF )
       {
@@ -130,7 +127,6 @@ void read_times ( char *filename, int nTimes, double *times)
 void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double *velocity )
 {
    int ip, it, d, check_EOF;
-   //char buffer[255];
    double buffer;
    FILE *file;
 
@@ -144,7 +140,6 @@ void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double
       {
          for ( d = 0; d < nDim; d++ )
          {
-            //check_EOF = fscanf(file, "%s", buffer);
             check_EOF = fscanf(file, "%lf\n", &buffer);
             if ( check_EOF == EOF )
             {
@@ -159,35 +154,6 @@ void read_velocities ( char *filename, int nPoints, int nDim, int nTimes, double
    // Close file
    fclose(file);
 }
-
-/*
-void assign_faces_to_verts ( mesh_t *mesh ) 
-{
-	int faces[mesh->nFaces];
-	int ip, iface, ipf, count;
-	for ( ip = 0; ip < mesh->nPoints; ip++ )
-	{
-		count = 0;
-		for ( iface = 0; iface < mesh->nFaces; iface++ )
-		{
-			for ( ipf = 0; ipf < mesh->nVertsPerFace; ipf++ )
-			{
-				if ( mesh->faces[iface * mesh->nVertsPerFace + ipf] == ip )
-				{
-					faces[count] = iface;
-					count++;
-				}
-			}
-		}
-		mesh->points[ip].nFaces = count;
-		mesh->points[ip].faces = malloc ( sizeof(int) * count );
-		for ( iface = 0; iface < count; iface++ )
-		{
-			mesh->points[ip].faces[iface] = faces[iface];
-		}
-	}
-}
-*/
 
 void create_nFacesPerPoint_vector ( int nDim, int nPoints, int nFaces, int nVertsPerFace, int *faces, int *nFacesPerPoint )
 {

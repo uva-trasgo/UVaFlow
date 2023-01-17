@@ -132,42 +132,6 @@ int share_side ( double *V1, double *V2, double *V3, double *V4, double *P, int 
 
 }
 
-/*
-double four_points_Matrix_Determinant ( double *V1, double *V2, double *V3, double *V4 )
-{
-
-    return  1 * V2[2] * V3[1] * V4[0] - V1[2] * 1 * V3[1] * V4[0] -
-            1 * V2[1] * V3[2] * V4[0] + V1[1] * 1 * V3[2] * V4[0] +
-            V1[2] * V2[1] * 1 * V4[0] - V1[1] * V2[2] * 1 * V4[0] -
-            1 * V2[2] * V3[0] * V4[1] + V1[2] * 1 * V3[0] * V4[1] +
-            1 * V2[0] * V3[2] * V4[1] - V1[0] * 1 * V3[2] * V4[1] -
-            V1[2] * V2[0] * 1 * V4[1] + V1[0] * V2[2] * 1 * V4[1] +
-            1 * V2[1] * V3[0] * V4[2] - V1[1] * 1 * V3[0] * V4[2] -
-            1 * V2[0] * V3[1] * V4[2] + V1[0] * 1 * V3[1] * V4[2] +
-            V1[1] * V2[0] * 1 * V4[2] - V1[0] * V2[1] * 1 * V4[2] -
-            V1[2] * V2[1] * V3[0] * 1 + V1[1] * V2[2] * V3[0] * 1 +
-            V1[2] * V2[0] * V3[1] * 1 - V1[0] * V2[2] * V3[1] * 1 -
-            V1[1] * V2[0] * V3[2] * 1 + V1[0] * V2[1] * V3[2] * 1;
-}
-
-int p_inside_tetrahedron ( int iv1, int iv2, int iv3, int iv4, double *coords_x, double *coords_y, double *coords_z, double *P, int nDim )
-{
-    double V1[3], V2[3], V3[3], V4[3];
-    V1[0] = coords_x[iv1]; V1[1] = coords_y[iv1]; V1[2] = coords_z[iv1];
-    V2[0] = coords_x[iv2]; V2[1] = coords_y[iv2]; V2[2] = coords_z[iv2];
-    V3[0] = coords_x[iv3]; V3[1] = coords_y[iv3]; V3[2] = coords_z[iv3];
-    V4[0] = coords_x[iv4]; V4[1] = coords_y[iv4]; V4[2] = coords_z[iv4];
-
-    double detT = four_points_Matrix_Determinant(V1, V2, V3, V4); 
-    double det1 = four_points_Matrix_Determinant(V1, V2, V3, P);
-    double det2 = four_points_Matrix_Determinant(V1, V2, P, V4);
-    double det3 = four_points_Matrix_Determinant(V1, P, V3, V4);
-    double det4 = four_points_Matrix_Determinant(P, V2, V3, V4);
-
-    return ( det1 * detT > 0 ) && ( det2 * detT > 0 ) && ( det3 * detT > 0 ) && ( det4 * detT > 0);
-}
-*/ 
-
 int p_inside_tetrahedron ( int iv1, int iv2, int iv3, int iv4, double *coords_x, double *coords_y, double *coords_z, double *P, int nDim )
 {
    double V1[3], V2[3], V3[3], V4[3];

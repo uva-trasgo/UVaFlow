@@ -393,11 +393,23 @@ int main(int argc, char *argv[])
       }
       fclose(fp_w);
    }
-   free (result);
-   kd_free(kd);
 
    gettimeofday(&globalend, NULL);
    time = (globalend.tv_sec - globalstart.tv_sec) + (globalend.tv_usec - globalstart.tv_usec)/1000000.0;
    printf("TOTAL elapsed time (including reading) = %f seconds\n", nPoints, time);
+
+   // Free
+   kd_free(kd);
+   free (kd);
+   free (coords_x);
+   free (coords_y);
+   if ( nDim == 3 ) free (coords_z);
+   free (velocities);
+   free (times);
+   free (result);
+   free (faces);
+   free (nFacesPerPoint);
+   free (facesPerPoint);
+
    return 0;
 }

@@ -17,44 +17,6 @@ int reset_coordinates ( struct kdtree *kd, double *Pcoords, int nDim )
    return data;
 }
 
-/*
-int reset_coordinates_2D ( int nDim, int nPoints, double *coords_x, double *coords_y, double *Pcoords )
-{
-   double distance, min_distance;
-   int ip, ipmin;
-   min_distance = distance_PQ_2D ( nDim, coords_x[0], coords_y[0], Pcoords );
-   ipmin = 0;
-   for ( ip = 1; ip < nPoints; ip++ )
-   {
-      distance = distance_PQ_2D ( nDim, coords_x[ip], coords_y[ip], Pcoords );
-      if ( distance < min_distance )
-      {
-         ipmin = ip;
-         min_distance = distance;
-      }
-   }
-   return ipmin;
-}
-
-int reset_coordinates_3D ( int nDim, int nPoints, double *coords_x, double *coords_y, double *coords_z, double *Pcoords )
-{
-   double distance, min_distance;
-   int ip, ipmin;
-   min_distance = distance_PQ_3D ( nDim, coords_x[0], coords_y[0], coords_z[0], Pcoords );
-   ipmin = 0;
-   for ( ip = 1; ip < nPoints; ip++ )
-   {
-      distance = distance_PQ_3D ( nDim, coords_x[ip], coords_y[ip], coords_z[ip], Pcoords );
-      if ( distance < min_distance )
-      {
-         ipmin = ip;
-         min_distance = distance;
-      }
-   }
-   return ipmin;
-}
-*/
-
 void interpolate_triangle ( 	double *coords_x, double *coords_y, double *velocities,
 				int iv1, int iv2, int iv3, int itime,
 				int nPoints, double *P, double *interpolated_vel, int nDim )
@@ -167,25 +129,11 @@ void interpolate_3D_tetrahedral_old ( double *coords_x, double *coords_y, double
 	/* 1.1 Compute lambda3 (located at lambda[2]) */
 	num = ( V2[0] - V4[0] - V2[1] + V4[1] ) * ( V1[1] - V4[1] ) * ( P[2] + (V1[2] - V4[2])/(V1[1] - V4[1]) * (V4[1] - P[1]) - V4[2] - (P[0]-P[1]+V4[1]-V4[0])/(V2[0]-V4[0]-V2[1]+V4[1]) );
 	denom = (V3[1] - V4[1] - V3[0] + V4[0]) * (V1[1]-V4[1]) + (V3[2]*V1[1] - V3[2]*V4[1] - V4[2]*V1[1] - V1[2]*V3[1] + V1[2]*V4[1] + V4[2]*V3[1]) * (V2[0]-V4[0] -V2[1]+V4[1]);
-/*
-	num = 	(V4[0]-P[0]) * ( V1[1]*(V4[2]-V2[2]) + V2[1]*(V1[2]-V4[2]) + V4[1]*(V2[2]-V1[2]) ) +
-			(V4[1]-P[1]) * ( V1[0]*(V2[2]-V4[2]) + V2[0]*(V4[2]-V1[2]) + V4[0]*(V1[2]-V2[2]) ) +
-			(V4[2]-P[2]) * ( V1[0]*(V4[1]-V2[1]) + V2[0]*(V1[1]-V4[1]) + V4[0]*(V4[1]-V1[1]) );
-	denom = (V3[0]-V4[0]) * ( V1[1]*(V2[2]-V4[2]) + V2[1]*(V4[2]-V1[2]) + V4[1]*(V1[2]-V2[2]) ) +
-			(V2[0]-V4[0]) * ( V1[1]*(V4[2]-V3[2]) + V3[1]*(V1[2]-V4[2]) + V4[1]*(V3[2]-V1[2]) ) +
-			(V1[0]-V4[0]) * ( V2[1]*(V3[2]-V4[2]) + V3[1]*(V4[2]-V2[2]) + V4[1]*(V2[2]-V3[2]) );
-*/
 	lambda[2] = num/denom;
 
 	/* 1.2 Compute lambda2 (located at lambda[1]) */
 	num = P[0] - P[1] + V4[1] - V4[0] + lambda[2] * ( V3[1] - V4[1] - V3[0] + V4[0] );
 	denom = V2[0] - V4[0] - V2[1] + V4[1];
-/*
-	num =	-( V1[1] - V4[1] ) * ( P[0] - lambda[2] * V3[0] ) +
-			V1[0] * ( -lambda[2] * V3[1] + lambda[2] * V4[1] + P[1] + V4[1] ) + 
-			V4[0] * ( -lambda[2] * V1[1] + lambda[2] * V3[1] - P[1] - V1[1] );
-	denom = V1[0]*(V2[1]-V4[1]) + V2[0]*(V4[1]-V1[1]) + V4[0]*(V1[1]-V2[1]);
-*/
 	lambda[1] = num / denom;
 
 	/* 1.3 Compute lambda1 (located at lambda[0]) */
@@ -302,7 +250,6 @@ void linear_interpolation_approach2_2D ( double t, double *Pcoords, double *time
       {
          // Pcoords will be reset to the closest mesh point coords
          ip = reset_coordinates ( kd, Pcoords, nDim );
-         //ip = reset_coordinates_2D ( nDim, nPoints, coords_x, coords_y, Pcoords );
       }
    }
    if ( ip > -1 ) // Either the point is a mesh point or has been reseted to one of the mesh points
@@ -372,7 +319,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
       ip = data;
    }
 
-   //ip = find_point_in_mesh_3D ( Pcoords, nDim, nPoints, coords_x, coords_y, coords_z );
    if ( ip == -1 ) // P is not a mesh point
    {
       // TODO: Consider closest point might not belong to the triangle containing the given point
@@ -393,7 +339,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
          }
       }
 
-      //iface = find_point_simplex_in_mesh_3D ( Pcoords, nDim, nFaces, nVertsPerFace, coords_x, coords_y, coords_z, faces);
       if (iface > -1) // There is a mesh face or volume containing given point
       {
          // Find closest time values in mesh->times array and interpolate
@@ -409,7 +354,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
             }
             else
             {
-               //if ( times[itime] > t ) // There exist 2 times in provided mesh data surrounding given t
                if ( tsearch == 0 ) // times[itime] > t // There exist 2 times in provided mesh data surrounding given t
                {
                  itprev = itime-1;
@@ -434,10 +378,8 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
                  interpolation[1] = (interp1[1] * (t1-t) + interp2[1] * (t-t0))/(t1-t0);
                  interpolation[2] = (interp1[2] * (t1-t) + interp2[2] * (t-t0))/(t1-t0);
 
-                 //tsearch = 0;
                }
             }
-         //}
          if (tsearch < 0) // There is not enough data to interpolate
          {
             fprintf( stderr, "Error: There is not enough information to perform linear_interpolation for t=%f\n", t );
@@ -448,7 +390,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
       {
          // Pcoords will be reset to the closest mesh point coords
          ip = reset_coordinates ( kd, Pcoords, nDim );
-         //ip = reset_coordinates_3D ( nDim, nPoints, coords_x, coords_y, coords_z, Pcoords );
       }
    }
    if ( ip > -1 ) // Either the point is a mesh point or has been reseted to one of the mesh points
@@ -459,9 +400,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
             interpolation[0] = velocities[itime*nPoints*nDim + ip*nDim];//mesh->points[ip].velocity[itime*mesh->nDim];
             interpolation[1] = velocities[itime*nPoints*nDim + ip*nDim + 1];//mesh->points[ip].velocity[itime*mesh->nDim+1];
             interpolation[2] = velocities[itime*nPoints*nDim + ip*nDim + 2];//mesh->points[ip].velocity[itime*mesh->nDim+2];
-
-
-               //tsearch = 0;
             }
 	else
 	{
@@ -486,7 +424,6 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
 
          }
 	}
-      //}
       if (tsearch < 0) // There is not enough data to interpolate
       {
          fprintf( stderr, "Error: There is not enough information to perform linear_interpolation for t=%f\n", t );
