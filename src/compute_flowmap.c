@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
 
    /* Show execution time */
    time = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)/1000000.0;
-   printf("\nFlowmap computation elapsed time = %f seconds\n", nPoints, time);
+   printf("\nFlowmap computation elapsed time = %f seconds\n", time);
 
    /* Print res to file */
    if ( atoi(argv[9]) )
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 
    gettimeofday(&globalend, NULL);
    time = (globalend.tv_sec - globalstart.tv_sec) + (globalend.tv_usec - globalstart.tv_usec)/1000000.0;
-   printf("TOTAL elapsed time (including reading) = %f seconds\n", nPoints, time);
+   printf("TOTAL elapsed time (including reading) = %f seconds\n", time);
 
    // Free
    kd_free(kd);
