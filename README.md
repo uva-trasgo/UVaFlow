@@ -114,7 +114,9 @@ Submitted to the Journal Of Computational Science [major review revision in proc
 
 ### Reproduction of the results in that paper
 
-We provide two different paths to reproduce the results shown in the paper.
+Regarding vectorization, check the [vectorization_reports_summary.txt](https://github.com/uva-trasgo/UVaFlow/blob/master/vectorization_reports_summary.txt) file to see a summary of the loops that have been vectorized.
+  
+With respect to the different execution time results, we provide two different paths to reproduce the results shown in the paper.
 
 - Option A implies preparing everything from scratch, as a regular UVaFlow software user.
 - Option B is a suggestion we have prepared in order to make the reproduction faster. 
