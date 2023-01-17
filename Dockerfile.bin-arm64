@@ -28,7 +28,7 @@ COPY Makefile ${INSTALL_DIR}/Makefile
 # Container init directory
 WORKDIR ${INSTALL_DIR}
 RUN make
-WORKDIR 2023_Reproduction_JoCS_Paper_Result
+WORKDIR 2023_Reproduction_JoCS_Paper_Results
 RUN make
 
 #### PRODUCTION CONTAINER ####
