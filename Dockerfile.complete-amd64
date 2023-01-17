@@ -24,9 +24,12 @@ COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
 COPY 2023_Reproduction_JoCS_Paper_Results ${INSTALL_DIR}/2023_Reproduction_JoCS_Paper_Results
 RUN mkdir -p ${INSTALL_DIR}/bin
+RUN mkdir -p ${INSTALL_DIR}/2023_Reproduction_JoCS_Paper_Results/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 
 # Container init directory
 WORKDIR ${INSTALL_DIR}
+RUN make
+WORKDIR 2023_Reproduction_JoCS_Paper_Results
 RUN make
 
