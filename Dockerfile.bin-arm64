@@ -20,6 +20,7 @@ RUN apt update && \
 # Copy sources to create
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
+COPY 2023_Reproduction_JoCS_Paper_Results ${INSTALL_DIR}/2023_Reproduction_JoCS_Paper_Results
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 
@@ -41,6 +42,7 @@ RUN apt-get update && apt-get install -y libgomp1
 
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
+COPY 2023_Reproduction_JoCS_Paper_Results ${INSTALL_DIR}/2023_Reproduction_JoCS_Paper_Results
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 COPY --from=uvaflow-builder ${INSTALL_DIR}/bin ${INSTALL_DIR}/bin

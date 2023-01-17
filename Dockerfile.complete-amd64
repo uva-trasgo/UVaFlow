@@ -22,6 +22,7 @@ RUN pip3 install pyvista meshio
 # Copy sources to create
 COPY src ${INSTALL_DIR}/src
 COPY include ${INSTALL_DIR}/include
+COPY 2023_Reproduction_JoCS_Paper_Results ${INSTALL_DIR}/2023_Reproduction_JoCS_Paper_Results
 RUN mkdir -p ${INSTALL_DIR}/bin
 COPY Makefile ${INSTALL_DIR}/Makefile
 
