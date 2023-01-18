@@ -18,7 +18,7 @@ toFile=0
 N=200
 
 # Folder containing the mesh data files
-source_folder="../../source/3D_200K"
+source_folder="../source/3D_200K"
 
 # Mesh axis steps
 nx=58
