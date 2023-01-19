@@ -20,7 +20,7 @@ int binarySearch(double *array, int size, double element, int *itime)
         middle = (high + low) / 2;
         if (array[middle] < element) 
         {
-            low = middle + 1;
+            low = middle;
         }
         else 
         {
