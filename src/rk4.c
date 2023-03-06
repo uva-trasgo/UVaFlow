@@ -98,8 +98,6 @@ void runge_kutta_4 ( double Pcoords_x, double Pcoords_y, double Pcoords_z, doubl
    	result[1] += 1/6.0 * (k1[1] + 2*k2[1] + 2*k3[1] + k4[1]);
 	if ( nDim == 3 ) result[2] += 1/6.0 * (k1[2] + 2*k2[2] + 2*k3[2] + k4[2]);
 
-	x0[0] += h;
-	x0[1] += h;
-	if ( nDim == 3 ) x0[2] += h;
+	t0 += h;
    }
 }
