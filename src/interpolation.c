@@ -374,9 +374,9 @@ void linear_interpolation_approach2_3D ( double t, double *Pcoords, double *time
                                                      iv1, iv2, iv3, iv4, itpost,
                                                      nPoints, Pcoords, interp2, nDim );
 		
-                 interpolation[0] = (interp2[0] * (t1-t) + interp1[0] * (t-t0))/(t1-t0);
-                 interpolation[1] = (interp2[1] * (t1-t) + interp1[1] * (t-t0))/(t1-t0);
-                 interpolation[2] = (interp2[2] * (t1-t) + interp1[2] * (t-t0))/(t1-t0);
+                 interpolation[0] = (interp1[0] * (t1-t) + interp2[0] * (t-t0))/(t1-t0);
+                 interpolation[1] = (interp1[1] * (t1-t) + interp2[1] * (t-t0))/(t1-t0);
+                 interpolation[2] = (interp1[2] * (t1-t) + interp2[2] * (t-t0))/(t1-t0);
 
                }
             }
