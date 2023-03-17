@@ -400,7 +400,6 @@ int main(int argc, char *argv[])
 
    // Free
    kd_free(kd);
-   free (kd);
    free (coords_x);
    free (coords_y);
    if ( nDim == 3 ) free (coords_z);
